@@ -1,4 +1,4 @@
-import crypto from "crypto";
+import crypto from 'crypto';
 
 /**
  * 编码
@@ -6,12 +6,10 @@ import crypto from "crypto";
  * @param key
  */
 export function aesEncrypt(data: string, key: string): Buffer {
-
-    const iv = key.substring(0, 16)
+    const iv = key.substring(0, 16);
     const cipher = crypto.createCipheriv('aes-128-cbc', key, iv);
-    let encrypted = cipher.update(data);
+    const encrypted = cipher.update(data);
     return Buffer.concat([encrypted, cipher.final()]);
-    ;
 }
 
 /**
@@ -20,9 +18,9 @@ export function aesEncrypt(data: string, key: string): Buffer {
  * @param key
  */
 export function aesDecrypt(encryptedData: string, key: string) {
-    const iv = key.substring(0, 16)
-    let encryptedText = Buffer.from(encryptedData, 'base64');
-    let decipher = crypto.createDecipheriv('aes-128-cbc', key, iv);
+    const iv = key.substring(0, 16);
+    const encryptedText = Buffer.from(encryptedData, 'base64');
+    const decipher = crypto.createDecipheriv('aes-128-cbc', key, iv);
     let decrypted = decipher.update(encryptedText);
     decrypted = Buffer.concat([decrypted, decipher.final()]);
     return decrypted.toString();

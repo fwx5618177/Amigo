@@ -1,6 +1,6 @@
-import * as fs from "fs";
-import * as path from "path";
-import * as log4js from "log4js";
+import * as fs from 'fs';
+import * as path from 'path';
+import * as log4js from 'log4js';
 import {
     ApiRejection,
     BaseClient,
@@ -9,8 +9,8 @@ import {
     pb,
     Platform,
     ShortDevice,
-} from "./core";
-import { Gender, hide, lock, md5, NOOP, OnlineStatus, timestamp } from "./common";
+} from './core';
+import { Gender, hide, lock, md5, NOOP, OnlineStatus, timestamp } from './common';
 import {
     addClass,
     bindInternalListeners,
@@ -31,12 +31,12 @@ import {
     setAvatar,
     setPersonalSign,
     setStatus,
-} from "./internal";
-import { FriendInfo, GroupInfo, MemberInfo, StrangerInfo } from "./entities";
-import { EventMap, GroupInviteEvent, GroupMessageEvent, PrivateMessageEvent } from "./events";
-import { Friend, User } from "./friend";
-import { Discuss, Group } from "./group";
-import { Member } from "./member";
+} from './internal';
+import { FriendInfo, GroupInfo, MemberInfo, StrangerInfo } from './entities';
+import { EventMap, GroupInviteEvent, GroupMessageEvent, PrivateMessageEvent } from './events';
+import { Friend, User } from './friend';
+import { Discuss, Group } from './group';
+import { Member } from './member';
 import {
     Forwardable,
     Image,
@@ -45,11 +45,11 @@ import {
     parseGroupMessageId,
     Quotable,
     Sendable,
-} from "./message";
-import { Listener, Matcher, ToDispose } from "triptrap";
-import { Guild } from "./guild";
-import { ErrorCode } from "./errors";
-import { Configuration } from "log4js";
+} from './message';
+import { Listener, Matcher, ToDispose } from 'triptrap';
+import { Guild } from './guild';
+import { ErrorCode } from './errors';
+import { Configuration } from 'log4js';
 
 /** 事件接口 */
 export interface Client extends BaseClient {
@@ -147,7 +147,7 @@ export class Client extends BaseClient {
     password_md5?: Buffer;
 
     get [Symbol.toStringTag]() {
-        return "OicqClient";
+        return 'OicqClient';
     }
 
     /** 好友列表 */
@@ -169,22 +169,22 @@ export class Client extends BaseClient {
     /** 在线状态 */
     status: OnlineStatus = OnlineStatus.Offline;
     /** 昵称 */
-    nickname = "";
+    nickname = '';
     /** 性别 */
-    sex: Gender = "unknown";
+    sex: Gender = 'unknown';
     /** 年龄 */
     age = 0;
     /** @todo 未知属性 */
-    bid = "";
+    bid = '';
     /** 漫游表情缓存 */
     stamp = new Set<string>();
     /** 相当于频道中的qq号 */
-    tiny_id = "";
+    tiny_id = '';
 
     /** csrf token */
     get bkn() {
         let bkn = 5381;
-        for (let v of this.sig.skey) bkn = bkn + (bkn << 5) + v;
+        for (const v of this.sig.skey) bkn = bkn + (bkn << 5) + v;
         bkn &= 2147483647;
         return bkn;
     }
@@ -225,16 +225,16 @@ export class Client extends BaseClient {
      */
     constructor(conf?: Config);
     constructor(uin?: number | Config, conf?: Config) {
-        if (typeof uin !== "number") conf = uin;
+        if (typeof uin !== 'number') conf = uin;
         const config = {
-            log_level: "info" as LogLevel,
+            log_level: 'info' as LogLevel,
             platform: Platform.Android,
             auto_server: false,
             ignore_self: true,
             resend: true,
             cache_group_member: true,
             reconn_interval: 5,
-            data_dir: path.join(require?.main?.path || process.cwd(), "data"),
+            data_dir: path.join(require?.main?.path || process.cwd(), 'data'),
             ...conf,
         };
         const dir = path.resolve(config.data_dir);
@@ -246,60 +246,60 @@ export class Client extends BaseClient {
             // device = require(file) as ShortDevice
             const rawFile = fs.readFileSync(file);
             device = JSON.parse(rawFile.toString()) as ShortDevice;
-            if (typeof device?.display === "undefined") throw new Error();
+            if (typeof device?.display === 'undefined') throw new Error();
         } catch {
             device = generateShortDevice();
             isNew = true;
             fs.writeFileSync(file, JSON.stringify(device, null, 2));
         }
         super(config.platform, device, config as Required<Config>);
-        this.logger = log4js.getLogger("[icqq]");
+        this.logger = log4js.getLogger('[icqq]');
         if (!config.sign_api_addr) {
             this.logger.warn(`未配置签名API地址，登录/消息发送可能失败`);
         }
         this.setSignServer(config.sign_api_addr);
-        if (typeof uin === "number") this.uin = uin;
+        if (typeof uin === 'number') this.uin = uin;
         this.device.mtime = Math.floor(fs.statSync(file).mtimeMs || Date.now());
         this.logger.level = config.log_level;
-        if (isNew) this.logger.mark("创建了新的设备文件：" + file);
-        this.logger.mark("----------");
+        if (isNew) this.logger.mark('创建了新的设备文件：' + file);
+        this.logger.mark('----------');
         this.logger.mark(
             `Package Version: icqq@${this.pkg.version} (Released on ${this.pkg.upday})`,
         );
-        this.logger.mark("View Changelogs：https://github.com/icqqjs/icqq/releases");
-        this.logger.mark("----------");
+        this.logger.mark('View Changelogs：https://github.com/icqqjs/icqq/releases');
+        this.logger.mark('----------');
 
         this.dir = dir;
         this.config = config as Required<Config>;
         bindInternalListeners.call(this);
-        this.on("internal.verbose", (verbose, level, c) => {
-            const list: Exclude<LogLevel, "off">[] = [
-                "fatal",
-                "mark",
-                "error",
-                "warn",
-                "info",
-                "debug",
-                "trace",
+        this.on('internal.verbose', (verbose, level, c) => {
+            const list: Exclude<LogLevel, 'off'>[] = [
+                'fatal',
+                'mark',
+                'error',
+                'warn',
+                'info',
+                'debug',
+                'trace',
             ];
             this.logger[list[level]](verbose);
         });
-        lock(this, "dir");
-        lock(this, "config");
-        lock(this, "_cache");
-        lock(this, "internal");
-        lock(this, "pickUser");
-        lock(this, "pickFriend");
-        lock(this, "pickGroup");
-        lock(this, "pickDiscuss");
-        lock(this, "pickMember");
-        lock(this, "cookies");
-        lock(this, "fl");
-        lock(this, "gl");
-        lock(this, "sl");
-        lock(this, "gml");
-        lock(this, "blacklist");
-        hide(this, "_sync_cookie");
+        lock(this, 'dir');
+        lock(this, 'config');
+        lock(this, '_cache');
+        lock(this, 'internal');
+        lock(this, 'pickUser');
+        lock(this, 'pickFriend');
+        lock(this, 'pickGroup');
+        lock(this, 'pickDiscuss');
+        lock(this, 'pickMember');
+        lock(this, 'cookies');
+        lock(this, 'fl');
+        lock(this, 'gl');
+        lock(this, 'sl');
+        lock(this, 'gml');
+        lock(this, 'blacklist');
+        hide(this, '_sync_cookie');
 
         let n = 0;
         this.heartbeat = () => {
@@ -311,7 +311,7 @@ export class Client extends BaseClient {
             }
         };
 
-        if (!this.config.auto_server) this.setRemoteServer("msfwifi.3g.qq.com", 8080);
+        if (!this.config.auto_server) this.setRemoteServer('msfwifi.3g.qq.com', 8080);
     }
 
     /**
@@ -338,42 +338,42 @@ export class Client extends BaseClient {
      */
     async login(uin?: number, password?: string | Buffer): Promise<void>;
     async login(uin?: number | string | Buffer, password?: string | Buffer) {
-        if ((await this.switchQQVer())) {
+        if (await this.switchQQVer()) {
             this.logger.info(`[${uin}]获取到签名Api协议版本：${this.config.ver}`);
         }
         // let [uin, password] = args
-        if (typeof uin !== "number") {
+        if (typeof uin !== 'number') {
             password = uin;
             uin = this.uin;
         }
         if (password && password.length > 0) {
             let md5pass;
-            if (typeof password === "string") md5pass = Buffer.from(password, "hex");
+            if (typeof password === 'string') md5pass = Buffer.from(password, 'hex');
             else md5pass = password;
             if (md5pass.length !== 16) md5pass = md5(String(password));
             this.password_md5 = md5pass;
         }
-        let apk_info = `${this.apk.display}_${this.apk.version}`;
+        const apk_info = `${this.apk.display}_${this.apk.version}`;
         this.logger.info(`[${uin}]使用协议：${apk_info}`);
         try {
             if (!uin) throw new Error();
             this.uin = uin;
-            const token_path = path.join(this.dir, this.uin + "_token");
-            if (!fs.existsSync(token_path) && fs.existsSync(token_path + "_bak")) {
-                fs.renameSync(token_path + "_bak", token_path);
+            const token_path = path.join(this.dir, this.uin + '_token');
+            if (!fs.existsSync(token_path) && fs.existsSync(token_path + '_bak')) {
+                fs.renameSync(token_path + '_bak', token_path);
             }
             const token = await fs.promises.readFile(token_path);
             return this.tokenLogin(token);
         } catch (e) {
             if (this.password_md5 && uin) {
-                if (this.apk.display === "Watch") {
-                    this.logger.warn("手表协议不支持密码登入，将使用扫码登入");
+                if (this.apk.display === 'Watch') {
+                    this.logger.warn('手表协议不支持密码登入，将使用扫码登入');
                     return this.sig.qrsig.length ? this.qrcodeLogin() : this.fetchQrcode();
                 }
                 return this.passwordLogin(uin as number, this.password_md5);
             } else {
                 if (this.apk.device_type === -1) {
-                    return this.logger.error("当前协议不支持扫码登入，请配置密码重新登入");
+                    return this.logger.error('当前协议不支持扫码登入，请配置密码重新登入');
                 }
                 return this.sig.qrsig.length ? this.qrcodeLogin() : this.fetchQrcode();
             }
@@ -403,7 +403,7 @@ export class Client extends BaseClient {
      * @param birthday `YYYYMMDD`格式的`string`（会过滤非数字字符）或`number`
      * */
     async setBirthday(birthday: string | number) {
-        const birth = String(birthday).replace(/[^\d]/g, "");
+        const birth = String(birthday).replace(/[^\d]/g, '');
         const buf = Buffer.allocUnsafe(4);
         buf.writeUInt16BE(Number(birth.substring(0, 4)));
         buf[2] = Number(birth.substring(4, 2));
@@ -412,12 +412,12 @@ export class Client extends BaseClient {
     }
 
     /** 设置个人说明 */
-    async setDescription(description = "") {
+    async setDescription(description = '') {
         return this._setProfile(0x14e33, Buffer.from(String(description)));
     }
 
     /** 设置个性签名 */
-    async setSignature(signature = "") {
+    async setSignature(signature = '') {
         return setPersonalSign.call(this, signature);
     }
 
@@ -427,8 +427,8 @@ export class Client extends BaseClient {
     }
 
     /** 设置头像 */
-    async setAvatar(file: ImageElem["file"]) {
-        return setAvatar.call(this, new Image({ type: "image", file }));
+    async setAvatar(file: ImageElem['file']) {
+        return setAvatar.call(this, new Image({ type: 'image', file }));
     }
 
     /** 获取漫游表情 */
@@ -488,7 +488,7 @@ export class Client extends BaseClient {
 
     /** 清空缓存文件 fs.rm need v14.14 */
     cleanCache() {
-        const dir = path.join(this.dir, "image");
+        const dir = path.join(this.dir, 'image');
         fs.rm?.(dir, { recursive: true }, () => {
             fs.mkdir(dir, NOOP);
         });
@@ -519,12 +519,12 @@ export class Client extends BaseClient {
     }
 
     /** Ocr图片转文字 */
-    imageOcr(file: ImageElem["file"]) {
-        return imageOcr.call(this, new Image({ type: "image", file }));
+    imageOcr(file: ImageElem['file']) {
+        return imageOcr.call(this, new Image({ type: 'image', file }));
     }
 
     /** @cqhttp (cqhttp遗留方法) use {@link cookies[domain]} */
-    getCookies(domain: Domain = "") {
+    getCookies(domain: Domain = '') {
         return this.cookies[domain];
     }
 
@@ -560,11 +560,11 @@ export class Client extends BaseClient {
         return {
             guild_id: guild.guild_id,
             guild_name: guild.guild_name,
-        }
+        };
     }
     getChannelInfo(guild_id: string, channel_id: string) {
         const guild = this.pickGuild(guild_id);
-        if (!guild) return null
+        if (!guild) return null;
         const channel = guild.channels.get(channel_id);
         if (!channel) return null;
         return {
@@ -572,7 +572,7 @@ export class Client extends BaseClient {
             channel_id: channel.channel_id,
             channel_name: channel.channel_name,
             channel_type: channel.channel_type,
-        }
+        };
     }
 
     /**
@@ -582,7 +582,7 @@ export class Client extends BaseClient {
      */
     async setEssenceMessage(message_id: string) {
         if (message_id.length <= 24)
-            throw new ApiRejection(ErrorCode.MessageBuilderError, "只能加精群消息");
+            throw new ApiRejection(ErrorCode.MessageBuilderError, '只能加精群消息');
         const { group_id, seq, rand } = parseGroupMessageId(message_id);
         return this.pickGroup(group_id).addEssence(seq, rand);
     }
@@ -594,7 +594,7 @@ export class Client extends BaseClient {
      */
     async removeEssenceMessage(message_id: string) {
         if (message_id.length <= 24)
-            throw new ApiRejection(ErrorCode.MessageBuilderError, "消息id无效");
+            throw new ApiRejection(ErrorCode.MessageBuilderError, '消息id无效');
         const { group_id, seq, rand } = parseGroupMessageId(message_id);
         return this.pickGroup(group_id).removeEssence(seq, rand);
     }
@@ -804,7 +804,7 @@ export class Client extends BaseClient {
     }
 
     /** @cqhttp use {@link Member.addFriend} */
-    async addFriend(group_id: number, user_id: number, comment = "") {
+    async addFriend(group_id: number, user_id: number, comment = '') {
         return this.pickMember(group_id, user_id).addFriend(comment);
     }
 
@@ -824,12 +824,12 @@ export class Client extends BaseClient {
     }
 
     /** @cqhttp use {@link setAvatar} */
-    async setPortrait(file: Parameters<Client["setAvatar"]>[0]) {
+    async setPortrait(file: Parameters<Client['setAvatar']>[0]) {
         return this.setAvatar(file);
     }
 
     /** @cqhttp use {@link Group.setAvatar} */
-    async setGroupPortrait(group_id: number, file: Parameters<Group["setAvatar"]>[0]) {
+    async setGroupPortrait(group_id: number, file: Parameters<Group['setAvatar']>[0]) {
         return this.pickGroup(group_id).setAvatar(file);
     }
 
@@ -839,7 +839,7 @@ export class Client extends BaseClient {
     }
 
     /** @cqhttp use {@link User.setFriendReq} or {@link User.addFriendBack} */
-    async setFriendAddRequest(flag: string, approve = true, remark = "", block = false) {
+    async setFriendAddRequest(flag: string, approve = true, remark = '', block = false) {
         const { user_id, seq, single } = parseFriendRequestFlag(flag);
         const user = this.pickUser(user_id);
         return single
@@ -848,7 +848,7 @@ export class Client extends BaseClient {
     }
 
     /** @cqhttp use {@link User.setGroupInvite} or {@link User.setGroupReq} */
-    async setGroupAddRequest(flag: string, approve = true, reason = "", block = false) {
+    async setGroupAddRequest(flag: string, approve = true, reason = '', block = false) {
         const { group_id, user_id, seq, invite } = parseGroupRequestFlag(flag);
         const user = this.pickUser(user_id);
         return invite
@@ -883,8 +883,8 @@ export class Client extends BaseClient {
     }
 
     /** emit an event */
-    em(name = "", data?: any) {
-        data = Object.defineProperty(data || {}, "self_id", {
+    em(name = '', data?: any) {
+        data = Object.defineProperty(data || {}, 'self_id', {
             value: this.uin,
             writable: true,
             enumerable: true,
@@ -892,7 +892,7 @@ export class Client extends BaseClient {
         });
         while (true) {
             this.emit(name, data);
-            let i = name.lastIndexOf(".");
+            const i = name.lastIndexOf('.');
             if (i === -1) break;
             name = name.slice(0, i);
         }
@@ -901,7 +901,7 @@ export class Client extends BaseClient {
     protected _msgExists(from: number, type: number, seq: number, time: number) {
         if (timestamp() + this.sig.time_diff - time >= 60 || time < this.stat.start_time)
             return true;
-        const id = [from, type, seq].join("-");
+        const id = [from, type, seq].join('-');
         const set = this._cache.get(time);
         if (!set) {
             this._cache.set(time, new Set([id]));
@@ -915,7 +915,7 @@ export class Client extends BaseClient {
 
     protected _calcMsgCntPerMin() {
         let cnt = 0;
-        for (let [time, set] of this._cache) {
+        for (const [time, set] of this._cache) {
             if (timestamp() - time >= 60) this._cache.delete(time);
             else cnt += set.size;
         }
@@ -929,7 +929,7 @@ export class Client extends BaseClient {
         buf.writeInt32BE(k, 5);
         buf.writeUInt16BE(v.length, 9);
         buf.fill(v, 11);
-        const payload = await this.sendOidb("OidbSvc.0x4ff_9", buf);
+        const payload = await this.sendOidb('OidbSvc.0x4ff_9', buf);
         const obj = pb.decode(payload);
         return obj[3] === 0 || obj[3] === 34;
     }
@@ -956,7 +956,7 @@ export class Client extends BaseClient {
 }
 
 /** 日志等级 */
-export type LogLevel = "trace" | "debug" | "info" | "warn" | "error" | "fatal" | "mark" | "off";
+export type LogLevel = 'trace' | 'debug' | 'info' | 'warn' | 'error' | 'fatal' | 'mark' | 'off';
 export type LogLevelMap = { [key in LogLevel]: number };
 export type LoggerFn = {
     [key in LogLevel]: (...args: any[]) => any;
@@ -1002,11 +1002,11 @@ export interface Config {
 }
 
 /** 数据统计 */
-export type Statistics = Client["stat"];
+export type Statistics = Client['stat'];
 
 function createDataDir(dir: string) {
     if (!fs.existsSync(dir)) fs.mkdirSync(dir, { mode: 0o755, recursive: true });
-    const img_path = path.join(dir, "image");
+    const img_path = path.join(dir, 'image');
     if (!fs.existsSync(img_path)) fs.mkdirSync(img_path);
 }
 

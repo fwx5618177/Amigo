@@ -1,4 +1,4 @@
-import { ApiRejection } from "./core";
+import { ApiRejection } from './core';
 
 /** 调用API时可能出现的错误 */
 export enum ErrorCode {
@@ -46,15 +46,15 @@ export enum ErrorCode {
 }
 
 const ErrorMessage: { [code: number]: string } = {
-    [ErrorCode.UserNotExists]: "查无此人",
-    [ErrorCode.GroupNotJoined]: "未加入的群",
-    [ErrorCode.MemberNotExists]: "幽灵群员",
-    [ErrorCode.RiskMessageError]: "群消息发送失败，可能被风控",
-    [ErrorCode.SensitiveWordsError]: "群消息发送失败，请检查消息内容",
-    10: "消息过长",
-    34: "消息过长",
-    120: "在该群被禁言",
-    121: "AT全体剩余次数不足",
+    [ErrorCode.UserNotExists]: '查无此人',
+    [ErrorCode.GroupNotJoined]: '未加入的群',
+    [ErrorCode.MemberNotExists]: '幽灵群员',
+    [ErrorCode.RiskMessageError]: '群消息发送失败，可能被风控',
+    [ErrorCode.SensitiveWordsError]: '群消息发送失败，请检查消息内容',
+    10: '消息过长',
+    34: '消息过长',
+    120: '在该群被禁言',
+    121: 'AT全体剩余次数不足',
 };
 
 export function drop(code: number, message?: string): never {

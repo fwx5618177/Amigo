@@ -1,14 +1,14 @@
-import fs from "fs";
-import path from "path";
-import { randomBytes } from "crypto";
-import { Readable } from "stream";
-import { pb } from "./core";
-import { drop, ErrorCode } from "./errors";
-import * as common from "./common";
-import { highwayUpload } from "./internal";
-import { FileElem } from "./message";
+import fs from 'fs';
+import path from 'path';
+import { randomBytes } from 'crypto';
+import { Readable } from 'stream';
+import { pb } from './core';
+import { drop, ErrorCode } from './errors';
+import * as common from './common';
+import { highwayUpload } from './internal';
+import { FileElem } from './message';
 
-type Client = import("./client").Client;
+type Client = import('./client').Client;
 
 /** 群文件/目录共通属性 */
 export interface GfsBaseStat {
@@ -73,12 +73,9 @@ export class Gfs {
         return this.c;
     }
 
-    constructor(
-        private readonly c: Client,
-        public readonly gid: number,
-    ) {
-        common.lock(this, "c");
-        common.lock(this, "gid");
+    constructor(private readonly c: Client, public readonly gid: number) {
+        common.lock(this, 'c');
+        common.lock(this, 'gid');
     }
 
     /** 获取使用空间和文件数 */
@@ -91,7 +88,7 @@ export class Gfs {
                         2: 3,
                     },
                 });
-                const payload = await this.c.sendOidbSvcTrpcTcp("OidbSvcTrpcTcp.0x6d8_3", body);
+                const payload = await this.c.sendOidbSvcTrpcTcp('OidbSvcTrpcTcp.0x6d8_3', body);
                 const rsp = payload[4];
                 const total = Number(rsp[4]),
                     used = Number(rsp[5]),
@@ -112,7 +109,7 @@ export class Gfs {
                         2: 2,
                     },
                 });
-                const payload = await this.c.sendOidbSvcTrpcTcp("OidbSvcTrpcTcp.0x6d8_2", body);
+                const payload = await this.c.sendOidbSvcTrpcTcp('OidbSvcTrpcTcp.0x6d8_2', body);
                 const rsp = payload[3];
                 const file_count = Number(rsp[4]),
                     max_file_count = Number(rsp[6]);
@@ -135,7 +132,7 @@ export class Gfs {
                 4: String(fid),
             },
         });
-        const payload = await this.c.sendOidbSvcTrpcTcp("OidbSvcTrpcTcp.0x6d8_0", body);
+        const payload = await this.c.sendOidbSvcTrpcTcp('OidbSvcTrpcTcp.0x6d8_0', body);
         const rsp = payload[1];
         checkRsp(rsp);
         return genGfsFileStat(rsp[4]);
@@ -149,8 +146,8 @@ export class Gfs {
         try {
             return await this._resolve(fid);
         } catch (e) {
-            const files = await this.dir("/");
-            for (let file of files) {
+            const files = await this.dir('/');
+            for (const file of files) {
                 if (!file.is_dir) break;
                 if (file.fid === fid) return file;
             }
@@ -165,7 +162,7 @@ export class Gfs {
      * @param limit 文件/目录上限，超过此上限就停止获取，默认`100`
      * @returns 文件和目录列表
      */
-    async dir(pid = "/", start = 0, limit = 100) {
+    async dir(pid = '/', start = 0, limit = 100) {
         const body = pb.encode({
             2: {
                 1: this.gid,
@@ -175,20 +172,20 @@ export class Gfs {
                 13: Number(start) || 0,
             },
         });
-        const payload = await this.c.sendOidbSvcTrpcTcp("OidbSvcTrpcTcp.0x6d8_1", body);
+        const payload = await this.c.sendOidbSvcTrpcTcp('OidbSvcTrpcTcp.0x6d8_1', body);
         const rsp = payload[2];
         checkRsp(rsp);
         const arr: (GfsDirStat | GfsFileStat)[] = [];
         if (!rsp[5]) return arr;
         const files = Array.isArray(rsp[5]) ? rsp[5] : [rsp[5]];
-        for (let file of files) {
+        for (const file of files) {
             if (file[3]) arr.push(genGfsFileStat(file[3]));
             else if (file[2]) arr.push(genGfsDirStat(file[2]));
         }
         return arr;
     }
     /** {@link dir} 的别名 */
-    ls(pid = "/", start = 0, limit = 100) {
+    ls(pid = '/', start = 0, limit = 100) {
         return this.dir(pid, start, limit);
     }
 
@@ -198,11 +195,11 @@ export class Gfs {
             1: {
                 1: this.gid,
                 2: 0,
-                3: "/",
+                3: '/',
                 4: String(name),
             },
         });
-        const payload = await this.c.sendOidbSvcTrpcTcp("OidbSvcTrpcTcp.0x6d7_0", body);
+        const payload = await this.c.sendOidbSvcTrpcTcp('OidbSvcTrpcTcp.0x6d7_0', body);
         const rsp = payload[1];
         checkRsp(rsp);
         return genGfsDirStat(rsp[4]);
@@ -212,7 +209,7 @@ export class Gfs {
     async rm(fid: string) {
         fid = String(fid);
         let rsp;
-        if (!fid.startsWith("/")) {
+        if (!fid.startsWith('/')) {
             //rm file
             const file = await this._resolve(fid);
             const body = pb.encode({
@@ -224,7 +221,7 @@ export class Gfs {
                     5: file.fid,
                 },
             });
-            const payload = await this.c.sendOidbSvcTrpcTcp("OidbSvcTrpcTcp.0x6d6_3", body);
+            const payload = await this.c.sendOidbSvcTrpcTcp('OidbSvcTrpcTcp.0x6d6_3', body);
             rsp = payload[4];
         } else {
             //rm dir
@@ -235,7 +232,7 @@ export class Gfs {
                     3: String(fid),
                 },
             });
-            const payload = await this.c.sendOidbSvcTrpcTcp("OidbSvcTrpcTcp.0x6d7_1", body);
+            const payload = await this.c.sendOidbSvcTrpcTcp('OidbSvcTrpcTcp.0x6d7_1', body);
             rsp = payload[2];
         }
         checkRsp(rsp);
@@ -249,7 +246,7 @@ export class Gfs {
     async rename(fid: string, name: string) {
         fid = String(fid);
         let rsp;
-        if (!fid.startsWith("/")) {
+        if (!fid.startsWith('/')) {
             //rename file
             const file = await this._resolve(fid);
             const body = pb.encode({
@@ -262,7 +259,7 @@ export class Gfs {
                     6: String(name),
                 },
             });
-            const payload = await this.c.sendOidbSvcTrpcTcp("OidbSvcTrpcTcp.0x6d6_4", body);
+            const payload = await this.c.sendOidbSvcTrpcTcp('OidbSvcTrpcTcp.0x6d6_4', body);
             rsp = payload[5];
         } else {
             //rename dir
@@ -274,7 +271,7 @@ export class Gfs {
                     4: String(name),
                 },
             });
-            const payload = await this.c.sendOidbSvcTrpcTcp("OidbSvcTrpcTcp.0x6d7_2", body);
+            const payload = await this.c.sendOidbSvcTrpcTcp('OidbSvcTrpcTcp.0x6d7_2', body);
             rsp = payload[3];
         }
         checkRsp(rsp);
@@ -297,7 +294,7 @@ export class Gfs {
                 6: String(pid),
             },
         });
-        const payload = await this.c.sendOidbSvcTrpcTcp("OidbSvcTrpcTcp.0x6d6_5", body);
+        const payload = await this.c.sendOidbSvcTrpcTcp('OidbSvcTrpcTcp.0x6d6_5', body);
         const rsp = payload[6];
         checkRsp(rsp);
     }
@@ -315,7 +312,7 @@ export class Gfs {
                 },
             },
         });
-        const payload = await this.c.sendOidbSvcTrpcTcp("OidbSvcTrpcTcp.0x6d9_4", body);
+        const payload = await this.c.sendOidbSvcTrpcTcp('OidbSvcTrpcTcp.0x6d9_4', body);
         let rsp = payload[5];
         checkRsp(rsp);
         rsp = rsp[4];
@@ -333,7 +330,7 @@ export class Gfs {
      */
     async upload(
         file: string | Buffer | Uint8Array,
-        pid = "/",
+        pid = '/',
         name?: string,
         callback?: (percentage: string) => void,
     ) {
@@ -342,7 +339,7 @@ export class Gfs {
             if (!Buffer.isBuffer(file)) file = Buffer.from(file);
             size = file.length;
             (md5 = common.md5(file)), (sha1 = common.sha(file));
-            name = name ? String(name) : "file" + md5.toString("hex");
+            name = name ? String(name) : 'file' + md5.toString('hex');
         } else {
             file = String(file);
             size = (await fs.promises.stat(file)).size;
@@ -357,14 +354,14 @@ export class Gfs {
                 4: 5,
                 5: String(pid),
                 6: name,
-                7: "/storage/emulated/0/Pictures/files/s/" + name,
+                7: '/storage/emulated/0/Pictures/files/s/' + name,
                 8: size,
                 9: sha1,
                 11: md5,
                 15: 1,
             },
         });
-        const payload = await this.c.sendOidbSvcTrpcTcp("OidbSvcTrpcTcp.0x6d6_0", body);
+        const payload = await this.c.sendOidbSvcTrpcTcp('OidbSvcTrpcTcp.0x6d6_0', body);
         const rsp = payload[1];
         checkRsp(rsp);
         if (!rsp[10]) {
@@ -390,7 +387,7 @@ export class Gfs {
                         100: 2,
                         200: String(this.c.apk.subid),
                         300: 2,
-                        400: "9e9c09dc",
+                        400: '9e9c09dc',
                         600: 4,
                     },
                     400: {
@@ -431,7 +428,7 @@ export class Gfs {
      * @param name 转发后的文件名，默认不变
      * @returns 转发的文件在当前群的属性
      */
-    async forward(stat: GfsFileStat, pid = "/", name?: string) {
+    async forward(stat: GfsFileStat, pid = '/', name?: string) {
         const body = pb.encode({
             1: {
                 1: this.gid,
@@ -440,17 +437,17 @@ export class Gfs {
                 4: 5,
                 5: String(pid),
                 6: String(name || stat.name),
-                7: "/storage/emulated/0/Pictures/files/s/" + (name || stat.name),
+                7: '/storage/emulated/0/Pictures/files/s/' + (name || stat.name),
                 8: Number(stat.size),
-                9: Buffer.from(stat.sha1, "hex"),
-                11: Buffer.from(stat.md5, "hex"),
+                9: Buffer.from(stat.sha1, 'hex'),
+                11: Buffer.from(stat.md5, 'hex'),
                 15: 1,
             },
         });
-        const payload = await this.c.sendOidbSvcTrpcTcp("OidbSvcTrpcTcp.0x6d6_0", body);
+        const payload = await this.c.sendOidbSvcTrpcTcp('OidbSvcTrpcTcp.0x6d6_0', body);
         const rsp = payload[1];
         checkRsp(rsp);
-        if (!rsp[10]) drop(ErrorCode.GroupFileNotExists, "文件不存在，无法被转发");
+        if (!rsp[10]) drop(ErrorCode.GroupFileNotExists, '文件不存在，无法被转发');
         return await this._feed(String(rsp[7]), rsp[6]);
     }
 
@@ -476,9 +473,9 @@ export class Gfs {
                 80: fid,
             },
         });
-        const payload = await this.c.sendOidbSvcTrpcTcp("OidbSvcTrpcTcp.0xe37_60100", body);
+        const payload = await this.c.sendOidbSvcTrpcTcp('OidbSvcTrpcTcp.0xe37_60100', body);
         const rsp = payload[90000];
-        if (rsp[10] !== 0) drop(ErrorCode.OfflineFileNotExists, "文件不存在，无法被转发");
+        if (rsp[10] !== 0) drop(ErrorCode.OfflineFileNotExists, '文件不存在，无法被转发');
         return await this._feed(String(rsp[30]), rsp[50]);
     }
 
@@ -496,7 +493,7 @@ export class Gfs {
                 4: file.fid,
             },
         });
-        const payload = await this.c.sendOidbSvcTrpcTcp("OidbSvcTrpcTcp.0x6d6_2", body);
+        const payload = await this.c.sendOidbSvcTrpcTcp('OidbSvcTrpcTcp.0x6d6_2', body);
         const rsp = payload[3];
         checkRsp(rsp);
         return {
@@ -506,7 +503,7 @@ export class Gfs {
             md5: file.md5,
             duration: file.duration,
             fid: file.fid,
-        } as Omit<FileElem, "type"> & { url: string };
+        } as Omit<FileElem, 'type'> & { url: string };
     }
 }
 
@@ -539,6 +536,6 @@ function genGfsFileStat(file: pb.Proto): GfsFileStat {
         download_times: file[9],
         is_dir: false,
     };
-    if (stat.fid.startsWith("/")) stat.fid = stat.fid.slice(1);
+    if (stat.fid.startsWith('/')) stat.fid = stat.fid.slice(1);
     return stat;
 }

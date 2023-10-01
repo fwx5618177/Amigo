@@ -1,9 +1,9 @@
-import { randomBytes } from "crypto";
-import axios from "axios";
-import { pb, jce } from "./core";
-import { ErrorCode, drop } from "./errors";
-import { timestamp, code2uin, PB_CONTENT, NOOP, lock, hide } from "./common";
-import { Contactable } from "./internal";
+import { randomBytes } from 'crypto';
+import axios from 'axios';
+import { pb, jce } from './core';
+import { ErrorCode, drop } from './errors';
+import { timestamp, code2uin, PB_CONTENT, NOOP, lock, hide } from './common';
+import { Contactable } from './internal';
 import {
     Sendable,
     GroupMessage,
@@ -13,8 +13,8 @@ import {
     parseGroupMessageId,
     Quotable,
     Converter,
-} from "./message";
-import { Gfs } from "./gfs";
+} from './message';
+import { Gfs } from './gfs';
 import {
     DiscussMessageEvent,
     GroupAdminEvent,
@@ -29,12 +29,12 @@ import {
     MemberDecreaseEvent,
     MemberIncreaseEvent,
     MessageRet,
-} from "./events";
-import { GroupInfo, MemberInfo } from "./entities";
-import { decodePb } from "./core/protobuf";
+} from './events';
+import { GroupInfo, MemberInfo } from './entities';
+import { decodePb } from './core/protobuf';
 
-type Client = import("./client").Client;
-type Member = import("./member").Member;
+type Client = import('./client').Client;
+type Member = import('./member').Member;
 
 const fetchmap = new Map<string, Promise<Map<number, MemberInfo>>>();
 const weakmap = new WeakMap<GroupInfo, Group>();
@@ -44,7 +44,7 @@ const GI_BUF = pb.encode({
     2: 0,
     5: 0,
     6: 0,
-    15: "",
+    15: '',
     29: 0,
     36: 0,
     37: 0,
@@ -53,7 +53,7 @@ const GI_BUF = pb.encode({
     49: 0,
     50: 0,
     54: 0,
-    89: "",
+    89: '',
 });
 
 export namespace Discuss {
@@ -73,12 +73,9 @@ export class Discuss extends Contactable {
         return this.gid;
     }
 
-    protected constructor(
-        c: Client,
-        public readonly gid: number,
-    ) {
+    protected constructor(c: Client, public readonly gid: number) {
         super(c);
-        lock(this, "gid");
+        lock(this, 'gid');
     }
 
     /** 发送一条消息 */
@@ -92,7 +89,7 @@ export class Discuss extends Contactable {
             5: randomBytes(4).readUInt32BE(),
             8: 0,
         });
-        const payload = await this.c.sendUni("MessageSvc.PbSendMsg", body);
+        const payload = await this.c.sendUni('MessageSvc.PbSendMsg', body);
         const rsp = pb.decode(payload);
         if (rsp[1] !== 0) {
             this.c.logger.error(`failed to send: [Discuss(${this.gid})] ${rsp[2]}(${rsp[1]})`);
@@ -101,7 +98,7 @@ export class Discuss extends Contactable {
         this.c.stat.sent_msg_cnt++;
         this.c.logger.info(`succeed to send: [Discuss(${this.gid})] ` + brief);
         return {
-            message_id: "",
+            message_id: '',
             seq: 0,
             rand: 0,
             time: 0,
@@ -111,15 +108,15 @@ export class Discuss extends Contactable {
 
 /** 群聊消息事件 */
 export interface GroupMessageEventMap {
-    "message"(event: GroupMessageEvent): void;
+    'message'(event: GroupMessageEvent): void;
     /** 普通消息 */
-    "message.normal"(event: GroupMessageEvent): void;
+    'message.normal'(event: GroupMessageEvent): void;
     /** 匿名消息 */
-    "message.anonymous"(event: GroupMessageEvent): void;
+    'message.anonymous'(event: GroupMessageEvent): void;
 }
 /** 群聊通知事件 */
 export interface GroupNoticeEventMap {
-    "notice"(
+    'notice'(
         event:
             | MemberIncreaseEvent
             | GroupSignEvent
@@ -131,29 +128,29 @@ export interface GroupNoticeEventMap {
             | GroupPokeEvent,
     ): void;
     /** 群员新增 */
-    "notice.increase"(event: MemberIncreaseEvent): void;
+    'notice.increase'(event: MemberIncreaseEvent): void;
     /** 群员减少 */
-    "notice.decrease"(event: MemberDecreaseEvent): void;
+    'notice.decrease'(event: MemberDecreaseEvent): void;
     /** 消息撤回 */
-    "notice.recall"(event: GroupRecallEvent): void;
+    'notice.recall'(event: GroupRecallEvent): void;
     /** 管理员变更 */
-    "notice.admin"(event: GroupAdminEvent): void;
+    'notice.admin'(event: GroupAdminEvent): void;
     /** 群禁言 */
-    "notice.ban"(event: GroupMuteEvent): void;
+    'notice.ban'(event: GroupMuteEvent): void;
     /** 群打卡 */
-    "notice.sign"(event: GroupSignEvent): void;
+    'notice.sign'(event: GroupSignEvent): void;
     /** 群转让 */
-    "notice.transfer"(event: GroupTransferEvent): void;
+    'notice.transfer'(event: GroupTransferEvent): void;
     /** 戳一戳 */
-    "notice.poke"(event: GroupPokeEvent): void;
+    'notice.poke'(event: GroupPokeEvent): void;
 }
 /** 群聊申请事件 */
 export interface GroupRequestEventMap {
-    "request"(event: GroupRequestEvent | GroupInviteEvent): void;
+    'request'(event: GroupRequestEvent | GroupInviteEvent): void;
     /** 加群申请 */
-    "request.add"(event: GroupRequestEvent): void;
+    'request.add'(event: GroupRequestEvent): void;
     /** 群邀请 */
-    "request.invite"(event: GroupInviteEvent): void;
+    'request.invite'(event: GroupInviteEvent): void;
 }
 /** 所有的群聊事件 */
 export interface GroupEventMap
@@ -211,15 +208,11 @@ export class Group extends Discuss {
     /** 群文件系统 */
     readonly fs: Gfs;
 
-    protected constructor(
-        c: Client,
-        gid: number,
-        private _info?: GroupInfo,
-    ) {
+    protected constructor(c: Client, gid: number, private _info?: GroupInfo) {
         super(c, gid);
         this.fs = new Gfs(c, gid);
-        lock(this, "fs");
-        hide(this, "_info");
+        lock(this, 'fs');
+        hide(this, '_info');
     }
 
     /**
@@ -239,7 +232,7 @@ export class Group extends Discuss {
      */
     getAvatarUrl(size: 0 | 40 | 100 | 140 = 0, history = 0) {
         return (
-            `https://p.qlogo.cn/gh/${this.gid}/${this.gid}${history ? "_" + history : ""}/` + size
+            `https://p.qlogo.cn/gh/${this.gid}/${this.gid}${history ? '_' + history : ''}/` + size
         );
     }
 
@@ -253,7 +246,7 @@ export class Group extends Discuss {
                 2: GI_BUF,
             },
         });
-        const payload = await this.c.sendOidb("OidbSvc.0x88d_0", body);
+        const payload = await this.c.sendOidb('OidbSvc.0x88d_0', body);
         const proto = pb.decode(payload)[4][1][3];
         if (!proto) {
             this.c.gl.delete(this.gid);
@@ -301,25 +294,25 @@ export class Group extends Discuss {
                 ]);
                 const body = jce.encodeWrapper(
                     { GTML },
-                    "mqq.IMService.FriendListServiceServantObj",
-                    "GetTroopMemberListReq",
+                    'mqq.IMService.FriendListServiceServantObj',
+                    'GetTroopMemberListReq',
                 );
-                const payload = await this.c.sendUni("friendlist.GetTroopMemberListReq", body, 10);
+                const payload = await this.c.sendUni('friendlist.GetTroopMemberListReq', body, 10);
                 const nested = jce.decodeWrapper(payload);
                 next = nested[4];
                 if (!this.c.gml.has(this.gid)) this.c.gml.set(this.gid, new Map());
-                for (let v of nested[3]) {
+                for (const v of nested[3]) {
                     let info: MemberInfo = {
                         group_id: this.gid,
                         user_id: v[0],
-                        nickname: v[4] || "",
-                        card: v[8] || "",
-                        sex: v[3] ? (v[3] === -1 ? "unknown" : "female") : "male",
+                        nickname: v[4] || '',
+                        card: v[8] || '',
+                        sex: v[3] ? (v[3] === -1 ? 'unknown' : 'female') : 'male',
                         age: v[2] || 0,
                         join_time: v[15],
                         last_sent_time: v[16],
                         level: v[14],
-                        role: v[18] % 2 === 1 ? "admin" : "member",
+                        role: v[18] % 2 === 1 ? 'admin' : 'member',
                         title: v[23],
                         title_expire_time: v[24] & 0xffffffff,
                         shutup_time: v[30] > timestamp() ? v[30] : 0,
@@ -327,15 +320,15 @@ export class Group extends Discuss {
                     };
                     const list = this.c.gml.get(this.gid)!;
                     info = Object.assign(list.get(v[0]) || {}, info);
-                    if (this.c.gl.get(this.gid)?.owner_id === v[0]) info.role = "owner";
+                    if (this.c.gl.get(this.gid)?.owner_id === v[0]) info.role = 'owner';
                     list.set(v[0], info);
                 }
                 if (!next) break;
             }
         } catch {
-            this.c.logger.error("加载群员列表超时");
+            this.c.logger.error('加载群员列表超时');
         }
-        fetchmap.delete(this.c.uin + "-" + this.gid);
+        fetchmap.delete(this.c.uin + '-' + this.gid);
         const mlist = this.c.gml.get(this.gid);
         if (!mlist?.size || !this.c.config.cache_group_member) this.c.gml.delete(this.gid);
         return mlist || new Map<number, MemberInfo>();
@@ -343,7 +336,7 @@ export class Group extends Discuss {
 
     /** 获取群员列表 */
     async getMemberMap(no_cache = false) {
-        const k = this.c.uin + "-" + this.gid;
+        const k = this.c.uin + '-' + this.gid;
         const fetching = fetchmap.get(k);
         if (fetching) return fetching;
         const mlist = this.c.gml.get(this.gid);
@@ -362,7 +355,7 @@ export class Group extends Discuss {
      * @param rand 消息的随机值
      */
     async addEssence(seq: number, rand: number) {
-        const retPacket = await this.c.sendPacket("Oidb", "OidbSvc.0xeac_1", {
+        const retPacket = await this.c.sendPacket('Oidb', 'OidbSvc.0xeac_1', {
             1: this.gid,
             2: seq,
             3: rand,
@@ -372,7 +365,7 @@ export class Group extends Discuss {
             this.c.logger.error(`加精群消息失败： ${ret[2]}(${ret[1]})`);
             drop(ret[1], ret[2]);
         } else {
-            return "设置精华成功";
+            return '设置精华成功';
         }
     }
 
@@ -382,7 +375,7 @@ export class Group extends Discuss {
      * @param rand 消息的随机值
      */
     async removeEssence(seq: number, rand: number) {
-        const retPacket = await this.c.sendPacket("Oidb", "OidbSvc.0xeac_2", {
+        const retPacket = await this.c.sendPacket('Oidb', 'OidbSvc.0xeac_2', {
             1: this.gid,
             2: seq,
             3: rand,
@@ -392,7 +385,7 @@ export class Group extends Discuss {
             this.c.logger.error(`移除群精华消息失败： ${ret[2]}(${ret[1]})`);
             drop(ret[1], ret[2]);
         } else {
-            return "移除群精华消息成功";
+            return '移除群精华消息成功';
         }
     }
 
@@ -405,7 +398,7 @@ export class Group extends Discuss {
     async sendMsg(
         content: Sendable,
         source?: Quotable,
-        anony: Omit<Anonymous, "flag"> | boolean = false,
+        anony: Omit<Anonymous, 'flag'> | boolean = false,
     ): Promise<MessageRet> {
         const converter = await this._preprocess(content, source);
         if (anony) {
@@ -422,10 +415,10 @@ export class Group extends Discuss {
             8: 0,
         });
         const e = `internal.${this.gid}.${rand}`;
-        let message_id = "";
+        let message_id = '';
         this.c.trapOnce(e, id => (message_id = id));
         try {
-            const payload = await this.c.sendUni("MessageSvc.PbSendMsg", body);
+            const payload = await this.c.sendUni('MessageSvc.PbSendMsg', body);
             const rsp = pb.decode(payload);
             if (rsp[1] !== 0) {
                 this.c.logger.error(`failed to send: [Group: ${this.gid}] ${rsp[2]}(${rsp[1]})`);
@@ -458,7 +451,7 @@ export class Group extends Discuss {
         {
             const { seq, rand, time } = parseGroupMessageId(message_id);
             const messageRet: MessageRet = { seq, rand, time, message_id };
-            this.c.emit("send", messageRet);
+            this.c.emit('send', messageRet);
 
             return messageRet;
         }
@@ -467,11 +460,11 @@ export class Group extends Discuss {
     private async _sendMsgByFrag(converter: Converter) {
         if (!this.c.config.resend || !converter.is_chain) drop(ErrorCode.RiskMessageError);
         const fragments = converter.toFragments();
-        this.c.logger.warn("群消息可能被风控，将尝试使用分片发送");
+        this.c.logger.warn('群消息可能被风控，将尝试使用分片发送');
         let n = 0;
         const rand = randomBytes(4).readUInt32BE();
         const div = randomBytes(2).readUInt16BE();
-        for (let frag of fragments) {
+        for (const frag of fragments) {
             const body = pb.encode({
                 1: { 2: { 1: this.gid } },
                 2: {
@@ -484,7 +477,7 @@ export class Group extends Discuss {
                 5: rand,
                 8: 0,
             });
-            this.c.writeUni("MessageSvc.PbSendMsg", body);
+            this.c.writeUni('MessageSvc.PbSendMsg', body);
         }
         const e = `internal.${this.gid}.${rand}`;
         try {
@@ -527,7 +520,7 @@ export class Group extends Discuss {
     async recallMsg(message: GroupMessage): Promise<boolean>;
     async recallMsg(param: number | string | GroupMessage, rand = 0, pktnum = 1) {
         if (param instanceof GroupMessage) var { seq, rand, pktnum } = param;
-        else if (typeof param === "string") var { seq, rand, pktnum } = parseGroupMessageId(param);
+        else if (typeof param === 'string') var { seq, rand, pktnum } = parseGroupMessageId(param);
         else var seq = param;
         if (pktnum > 1) {
             var msg: any = [],
@@ -570,7 +563,7 @@ export class Group extends Discuss {
                 5: reserver,
             },
         });
-        const payload = await this.c.sendUni("PbMessageSvc.PbMsgWithDraw", body);
+        const payload = await this.c.sendUni('PbMessageSvc.PbMsgWithDraw', body);
         return pb.decode(payload)[2][1] === 0;
     }
 
@@ -591,7 +584,7 @@ export class Group extends Discuss {
             1: this.gid,
             2: obj,
         });
-        const payload = await this.c.sendOidb("OidbSvc.0x89a_0", body);
+        const payload = await this.c.sendOidb('OidbSvc.0x89a_0', body);
         return pb.decode(payload)[3] === 0;
     }
 
@@ -600,41 +593,41 @@ export class Group extends Discuss {
         const buf = Buffer.allocUnsafe(5);
         buf.writeUInt32BE(this.gid);
         buf.writeUInt8(yes ? 1 : 0, 4);
-        const payload = await this.c.sendOidb("OidbSvc.0x568_22", buf);
+        const payload = await this.c.sendOidb('OidbSvc.0x568_22', buf);
         return pb.decode(payload)[3] === 0;
     }
 
     /** 设置群备注 */
-    async setRemark(remark = "") {
+    async setRemark(remark = '') {
         const body = pb.encode({
             1: {
                 1: this.gid,
                 2: code2uin(this.gid),
-                3: String(remark || ""),
+                3: String(remark || ''),
             },
         });
-        await this.c.sendOidb("OidbSvc.0xf16_1", body);
+        await this.c.sendOidb('OidbSvc.0xf16_1', body);
     }
 
     /** 禁言匿名群员，默认1800秒 */
     async muteAnony(flag: string, duration = 1800) {
-        const [nick, id] = flag.split("@");
-        const Cookie = this.c.cookies["qqweb.qq.com"];
-        let body = new URLSearchParams({
+        const [nick, id] = flag.split('@');
+        const Cookie = this.c.cookies['qqweb.qq.com'];
+        const body = new URLSearchParams({
             anony_id: id,
             group_code: String(this.gid),
             seconds: String(duration),
             anony_nick: nick,
             bkn: String(this.c.bkn),
         }).toString();
-        await axios.post("https://qqweb.qq.com/c/anonymoustalk/blacklist", body, {
-            headers: { Cookie, "Content-Type": "application/x-www-form-urlencoded" },
+        await axios.post('https://qqweb.qq.com/c/anonymoustalk/blacklist', body, {
+            headers: { Cookie, 'Content-Type': 'application/x-www-form-urlencoded' },
             timeout: 5000,
         });
     }
 
     /** 获取自己的匿名情报 */
-    async getAnonyInfo(): Promise<Omit<Anonymous, "flag">> {
+    async getAnonyInfo(): Promise<Omit<Anonymous, 'flag'>> {
         const body = pb.encode({
             1: 1,
             10: {
@@ -642,7 +635,7 @@ export class Group extends Discuss {
                 2: this.gid,
             },
         });
-        const payload = await this.c.sendUni("group_anonymous_generate_nick.group", body);
+        const payload = await this.c.sendUni('group_anonymous_generate_nick.group', body);
         const obj = pb.decode(payload)[11];
         return {
             enable: !obj[10][1],
@@ -663,7 +656,7 @@ export class Group extends Discuss {
             4: this.c.uin,
             5: this.gid,
         });
-        const payload = await this.c.sendOidb("OidbSvc.0x8a7_0", body);
+        const payload = await this.c.sendOidb('OidbSvc.0x8a7_0', body);
         return pb.decode(payload)[4][2] as number;
     }
 
@@ -677,7 +670,7 @@ export class Group extends Discuss {
                 },
             },
         });
-        const payload = await this.c.sendOidb("OidbSvc.0x88d_0", body);
+        const payload = await this.c.sendOidb('OidbSvc.0x88d_0', body);
         return pb.decode(payload)[4][1][3][22];
     }
 
@@ -692,7 +685,7 @@ export class Group extends Discuss {
                 2: Number(seq || (await this._getLastSeq())),
             },
         });
-        await this.c.sendUni("PbMessageSvc.PbMsgReadedReport", body);
+        await this.c.sendUni('PbMessageSvc.PbMsgReadedReport', body);
     }
 
     /**
@@ -711,7 +704,7 @@ export class Group extends Discuss {
             3: Number(seq),
             6: 0,
         });
-        const payload = await this.c.sendUni("MessageSvc.PbGetGroupMsg", body);
+        const payload = await this.c.sendUni('MessageSvc.PbGetGroupMsg', body);
         const obj = pb.decode(payload),
             messages: GroupMessage[] = [];
         if (obj[1] > 0 || !obj[6]) return [];
@@ -733,13 +726,13 @@ export class Group extends Discuss {
     }
 
     /** 设置群头像 */
-    async setAvatar(file: ImageElem["file"]) {
-        const img = new Image({ type: "image", file });
+    async setAvatar(file: ImageElem['file']) {
+        const img = new Image({ type: 'image', file });
         await img.task;
         const url =
             `http://htdata3.qq.com/cgi-bin/httpconn?htcmd=0x6ff0072&ver=5520&ukey=${this.c.sig.skey}&range=0&uin=${this.c.uin}&seq=1&groupuin=${this.gid}&filetype=3&imagetype=5&userdata=0&subcmd=1&subver=101&clip=0_0_0_0&filesize=` +
             img.size;
-        await axios.post(url, img.readable, { headers: { "Content-Length": String(img.size) } });
+        await axios.post(url, img.readable, { headers: { 'Content-Length': String(img.size) } });
         img.deleteTmpFile();
     }
 
@@ -754,7 +747,7 @@ export class Group extends Discuss {
                 1: Number(uid),
             },
         });
-        const payload = await this.c.sendOidb("OidbSvc.oidb_0x758", body);
+        const payload = await this.c.sendOidb('OidbSvc.oidb_0x758', body);
         return pb.decode(payload)[4].toBuffer().length > 6;
     }
 
@@ -767,7 +760,7 @@ export class Group extends Discuss {
                 3: this.c.apk.ver,
             },
         });
-        const payload = await this.c.sendOidb("OidbSvc.0xeb7_1", body);
+        const payload = await this.c.sendOidb('OidbSvc.0xeb7_1', body);
         const rsp = pb.decode(payload);
         return { result: rsp[3] & 0xffffffff };
     }
@@ -780,10 +773,10 @@ export class Group extends Discuss {
         const GroupMngReq = jce.encodeStruct([2, this.c.uin, buf]);
         const body = jce.encodeWrapper(
             { GroupMngReq },
-            "KQQ.ProfileService.ProfileServantObj",
-            "GroupMngReq",
+            'KQQ.ProfileService.ProfileServantObj',
+            'GroupMngReq',
         );
-        const payload = await this.c.sendUni("ProfileService.GroupMngReq", body);
+        const payload = await this.c.sendUni('ProfileService.GroupMngReq', body);
         return jce.decodeWrapper(payload)[1] === 0;
     }
 
@@ -801,7 +794,7 @@ export class Group extends Discuss {
      * @param title 头衔名
      * @param duration 持续时间，默认`-1`，表示永久
      */
-    setTitle(uid: number, title = "", duration = -1) {
+    setTitle(uid: number, title = '', duration = -1) {
         return this.pickMember(uid).setTitle(title, duration);
     }
     /**
@@ -809,7 +802,7 @@ export class Group extends Discuss {
      * @param uid 群员账号
      * @param card 名片
      */
-    setCard(uid: number, card = "") {
+    setCard(uid: number, card = '') {
         return this.pickMember(uid).setCard(card);
     }
     /**
@@ -842,33 +835,33 @@ export class Group extends Discuss {
      * @returns
      */
     async getMuteMemberList() {
-        let body = {
-            "1": 2201,
-            "3": 0,
-            "4": {
-                "1": this.group_id,
-                "2": 0,
-                "3": 6,
-                "5": {
-                    "1": 0,
-                    "12": 0,
+        const body = {
+            '1': 2201,
+            '3': 0,
+            '4': {
+                '1': this.group_id,
+                '2': 0,
+                '3': 6,
+                '5': {
+                    '1': 0,
+                    '12': 0,
                 },
             },
         };
 
-        let toTime = (timestamp: number) => {
-            var date = new Date(timestamp * 1000);
-            var Y = date.getFullYear() + "-";
-            var M =
-                (date.getMonth() + 1 < 10 ? "0" + (date.getMonth() + 1) : date.getMonth() + 1) +
-                "-";
-            var D = (date.getDate() < 10 ? "0" + date.getDate() : date.getDate()) + " ";
-            var h = date.getHours() + ":";
-            var m = date.getMinutes();
+        const toTime = (timestamp: number) => {
+            const date = new Date(timestamp * 1000);
+            const Y = date.getFullYear() + '-';
+            const M =
+                (date.getMonth() + 1 < 10 ? '0' + (date.getMonth() + 1) : date.getMonth() + 1) +
+                '-';
+            const D = (date.getDate() < 10 ? '0' + date.getDate() : date.getDate()) + ' ';
+            const h = date.getHours() + ':';
+            const m = date.getMinutes();
             return Y + M + D + h + m;
         };
 
-        let resBody = await this.c.sendUni("OidbSvc.0x899_0", pb.encode(body));
+        const resBody = await this.c.sendUni('OidbSvc.0x899_0', pb.encode(body));
         let res = ((await decodePb(resBody)) as any)[4][4];
 
         if (!(res instanceof Array)) {

@@ -1,4 +1,4 @@
-import { Gender, GroupRole } from "./common";
+import { Gender, GroupRole } from './common';
 
 /** 陌生人资料 */
 export interface StrangerInfo {

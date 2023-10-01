@@ -1,5 +1,6 @@
 {
-    "extends": ["prettier", "plugin:@typescript-eslint/recommended", "plugin:prettier/recommended"],
+    "extends": ["plugin:@typescript-eslint/recommended", "plugin:prettier/recommended"],
+    "plugins": ["prettier"],
     "parserOptions": {
         "ecmaVersion": 2018,
         "sourceType": "module"
@@ -14,6 +15,9 @@
         "@typescript-eslint/ban-types": "off",
         "@typescript-eslint/no-var-requires": "off",
         "@typescript-eslint/no-empty-function": 0,
-        "prefer-rest-params": "off"
+        "prefer-rest-params": "off",
+        "prettier/prettier": "off",
+        "@typescript-eslint/ban-ts-comment": "off",
+        "@typescript-eslint/no-non-null-asserted-optional-chain": "off"
     }
 }

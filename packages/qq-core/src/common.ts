@@ -1,21 +1,21 @@
-import * as fs from "fs";
-import * as crypto from "crypto";
-import * as stream from "stream";
-import * as util from "util";
-import * as os from "os";
-import * as pb from "./core/protobuf";
+import * as fs from 'fs';
+import * as crypto from 'crypto';
+import * as stream from 'stream';
+import * as util from 'util';
+import * as os from 'os';
+import * as pb from './core/protobuf';
 
 export function uuid() {
-    let hex = crypto.randomBytes(16).toString("hex");
+    const hex = crypto.randomBytes(16).toString('hex');
     return (
         hex.substring(0, 8) +
-        "-" +
+        '-' +
         hex.substring(8, 4) +
-        "-" +
+        '-' +
         hex.substr(12, 4) +
-        "-" +
+        '-' +
         hex.substring(16, 4) +
-        "-" +
+        '-' +
         hex.substring(20)
     );
 }
@@ -23,8 +23,8 @@ export function uuid() {
 /** 计算流的md5 */
 export function md5Stream(readable: stream.Readable) {
     return new Promise((resolve, reject) => {
-        readable.on("error", reject);
-        readable.pipe(crypto.createHash("md5").on("error", reject).on("data", resolve));
+        readable.on('error', reject);
+        readable.pipe(crypto.createHash('md5').on('error', reject).on('data', resolve));
     }) as Promise<Buffer>;
 }
 
@@ -32,8 +32,8 @@ export function md5Stream(readable: stream.Readable) {
 export function fileHash(filepath: string) {
     const readable = fs.createReadStream(filepath);
     const sha = new Promise((resolve, reject) => {
-        readable.on("error", reject);
-        readable.pipe(crypto.createHash("sha1").on("error", reject).on("data", resolve));
+        readable.on('error', reject);
+        readable.pipe(crypto.createHash('sha1').on('error', reject).on('data', resolve));
     }) as Promise<Buffer>;
     return Promise.all([md5Stream(readable), sha]);
 }
@@ -71,11 +71,11 @@ export function uin2code(uin: number) {
 /** 解析彩色群名片 */
 export function parseFunString(buf: Buffer) {
     if (buf[0] === 0xa) {
-        let res = "";
+        let res = '';
         try {
             let arr = pb.decode(buf)[1];
             if (!Array.isArray(arr)) arr = [arr];
-            for (let v of arr) {
+            for (const v of arr) {
                 if (v[2]) res += String(v[2]);
             }
         } catch {}
@@ -88,16 +88,16 @@ export function parseFunString(buf: Buffer) {
 /** xml转义 */
 export function escapeXml(str: string) {
     return str.replace(/[&"><]/g, function (s: string) {
-        if (s === "&") return "&amp;";
-        if (s === "<") return "&lt;";
-        if (s === ">") return "&gt;";
-        if (s === '"') return "&quot;";
-        return "";
+        if (s === '&') return '&amp;';
+        if (s === '<') return '&lt;';
+        if (s === '>') return '&gt;';
+        if (s === '"') return '&quot;';
+        return '';
     });
 }
 
 export function log(any: any) {
-    if (any instanceof Buffer) any = any.toString("hex").replace(/(.)(.)/g, "$1$2 ");
+    if (any instanceof Buffer) any = any.toString('hex').replace(/(.)(.)/g, '$1$2 ');
     console.log(
         util.inspect(any, {
             depth: 20,
@@ -115,12 +115,12 @@ export class DownloadTransform extends stream.Transform {
         this._size += data.length;
         let error = null;
         if (this._size <= MAX_UPLOAD_SIZE) this.push(data);
-        else error = new Error("downloading over 30MB is refused");
+        else error = new Error('downloading over 30MB is refused');
         callback(error);
     }
 }
 export const PB_CONTENT = pb.encode({ 1: 1, 2: 0, 3: 0 });
-export const IS_WIN = os.platform() === "win32";
+export const IS_WIN = os.platform() === 'win32';
 
 /** 系统临时目录，用于临时存放下载的图片等内容 */
 export const TMP_DIR = os.tmpdir();
@@ -129,10 +129,10 @@ export const TMP_DIR = os.tmpdir();
 export const MAX_UPLOAD_SIZE = 31457280;
 
 /** 性别 */
-export type Gender = "male" | "female" | "unknown";
+export type Gender = 'male' | 'female' | 'unknown';
 
 /** 群内权限 */
-export type GroupRole = "owner" | "admin" | "member";
+export type GroupRole = 'owner' | 'admin' | 'member';
 
 /** 可设置的在线状态 */
 export enum OnlineStatus {
@@ -152,4 +152,4 @@ export enum OnlineStatus {
     DontDisturb = 70,
 }
 
-export * from "./core/constants";
+export * from './core/constants';

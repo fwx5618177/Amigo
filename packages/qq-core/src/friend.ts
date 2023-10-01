@@ -1,10 +1,10 @@
-import { randomBytes } from "crypto";
-import { Readable } from "stream";
-import fs from "fs";
-import path from "path";
-import { pb, jce } from "./core";
-import { ErrorCode, drop } from "./errors";
-import { Gender, PB_CONTENT, code2uin, timestamp, lock, hide, fileHash, md5, sha } from "./common";
+import { randomBytes } from 'crypto';
+import { Readable } from 'stream';
+import fs from 'fs';
+import path from 'path';
+import { pb, jce } from './core';
+import { ErrorCode, drop } from './errors';
+import { Gender, PB_CONTENT, code2uin, timestamp, lock, hide, fileHash, md5, sha } from './common';
 import {
     Sendable,
     PrivateMessage,
@@ -13,8 +13,8 @@ import {
     genDmMessageId,
     parseDmMessageId,
     FileElem,
-} from "./message";
-import { buildSyncCookie, Contactable, highwayHttpUpload, CmdID } from "./internal";
+} from './message';
+import { buildSyncCookie, Contactable, highwayHttpUpload, CmdID } from './internal';
 import {
     FriendDecreaseEvent,
     FriendIncreaseEvent,
@@ -24,11 +24,11 @@ import {
     GroupInviteEvent,
     MessageRet,
     PrivateMessageEvent,
-} from "./events";
-import { FriendInfo } from "./entities";
-import { decodePb } from "./core/protobuf";
+} from './events';
+import { FriendInfo } from './entities';
+import { decodePb } from './core/protobuf';
 
-type Client = import("./client").Client;
+type Client = import('./client').Client;
 
 const weakmap = new WeakMap<FriendInfo, Friend>();
 
@@ -50,12 +50,9 @@ export class User extends Contactable {
         return new User(this, Number(uid));
     }
 
-    protected constructor(
-        c: Client,
-        public readonly uid: number,
-    ) {
+    protected constructor(c: Client, public readonly uid: number) {
         super(c);
-        lock(this, "uid");
+        lock(this, 'uid');
     }
 
     /** 返回作为好友的实例 */
@@ -81,10 +78,10 @@ export class User extends Contactable {
         const FS = jce.encodeStruct([this.c.uin, this.uid, 3004, 0, null, 1]);
         const body = jce.encodeWrapper(
             { FS },
-            "mqq.IMService.FriendListServiceServantObj",
-            "GetUserAddFriendSettingReq",
+            'mqq.IMService.FriendListServiceServantObj',
+            'GetUserAddFriendSettingReq',
         );
-        const payload = await this.c.sendUni("friendlist.getUserAddFriendSetting", body);
+        const payload = await this.c.sendUni('friendlist.getUserAddFriendSetting', body);
         return jce.decodeWrapper(payload)[2] as number;
     }
 
@@ -103,7 +100,7 @@ export class User extends Contactable {
                     this.c.sig.seq + 1,
                     1,
                     0,
-                    Buffer.from("0C180001060131160131", "hex"),
+                    Buffer.from('0C180001060131160131', 'hex'),
                 ]),
                 this.uid,
                 0,
@@ -118,7 +115,7 @@ export class User extends Contactable {
                     this.c.sig.seq + 1,
                     1,
                     0,
-                    Buffer.from("0C180001060131160135", "hex"),
+                    Buffer.from('0C180001060131160135', 'hex'),
                 ]),
                 this.uid,
                 0,
@@ -128,38 +125,38 @@ export class User extends Contactable {
         }
         const body = jce.encodeWrapper(
             { ReqFavorite },
-            "VisitorSvc",
-            "ReqFavorite",
+            'VisitorSvc',
+            'ReqFavorite',
             this.c.sig.seq + 1,
         );
-        const payload = await this.c.sendUni("VisitorSvc.ReqFavorite", body);
+        const payload = await this.c.sendUni('VisitorSvc.ReqFavorite', body);
         return jce.decodeWrapper(payload)[0][3] === 0;
     }
 
     /** 查看资料 */
     async getSimpleInfo() {
-        const arr = [null, 0, "", [this.uid], 1, 1, 0, 0, 0, 1, 0, 1];
+        const arr = [null, 0, '', [this.uid], 1, 1, 0, 0, 0, 1, 0, 1];
         arr[101] = 1;
         const req = jce.encodeStruct(arr);
         const body = jce.encodeWrapper(
             { req },
-            "KQQ.ProfileService.ProfileServantObj",
-            "GetSimpleInfo",
+            'KQQ.ProfileService.ProfileServantObj',
+            'GetSimpleInfo',
         );
-        const payload = await this.c.sendUni("ProfileService.GetSimpleInfo", body);
+        const payload = await this.c.sendUni('ProfileService.GetSimpleInfo', body);
         const nested = jce.decodeWrapper(payload);
-        for (let v of nested) {
+        for (const v of nested) {
             return {
                 /** 账号 */
                 user_id: v[1] as number,
                 /** 昵称 */
-                nickname: (v[5] || "") as string,
+                nickname: (v[5] || '') as string,
                 /** 性别 */
-                sex: (v[3] ? (v[3] === -1 ? "unknown" : "female") : "male") as Gender,
+                sex: (v[3] ? (v[3] === -1 ? 'unknown' : 'female') : 'male') as Gender,
                 /** 年龄 */
                 age: (v[4] || 0) as number,
                 /** 地区 */
-                area: (v[13] + " " + v[14] + " " + v[15]).trim(),
+                area: (v[13] + ' ' + v[14] + ' ' + v[15]).trim(),
             };
         }
         drop(ErrorCode.UserNotExists);
@@ -179,7 +176,7 @@ export class User extends Contactable {
             3: 0,
             4: Number(cnt),
         });
-        const payload = await this.c.sendUni("MessageSvc.PbGetOneDayRoamMsg", body);
+        const payload = await this.c.sendUni('MessageSvc.PbGetOneDayRoamMsg', body);
         const obj = pb.decode(payload),
             messages: PrivateMessage[] = [];
         if (obj[1] > 0 || !obj[6]) return messages;
@@ -205,7 +202,7 @@ export class User extends Contactable {
                 },
             },
         });
-        await this.c.sendUni("PbMessageSvc.PbMsgReadedReport", body);
+        await this.c.sendUni('PbMessageSvc.PbMsgReadedReport', body);
     }
 
     /**
@@ -224,7 +221,7 @@ export class User extends Contactable {
     async recallMsg(message: PrivateMessage): Promise<boolean>;
     async recallMsg(param: number | string | PrivateMessage, rand = 0, time = 0) {
         if (param instanceof PrivateMessage) var { seq, rand, time } = param;
-        else if (typeof param === "string") var { seq, rand, time } = parseDmMessageId(param);
+        else if (typeof param === 'string') var { seq, rand, time } = parseDmMessageId(param);
         else var seq = param;
         const body = pb.encode({
             1: [
@@ -247,15 +244,15 @@ export class User extends Contactable {
                 },
             ],
         });
-        const payload = await this.c.sendUni("PbMessageSvc.PbMsgWithDraw", body);
+        const payload = await this.c.sendUni('PbMessageSvc.PbMsgWithDraw', body);
         return pb.decode(payload)[1][1] <= 2;
     }
 
     private _getRouting(file = false): pb.Encodable {
-        if (Reflect.has(this, "gid"))
+        if (Reflect.has(this, 'gid'))
             return {
                 3: {
-                    1: code2uin(Reflect.get(this, "gid") as number),
+                    1: code2uin(Reflect.get(this, 'gid') as number),
                     2: this.uid,
                 },
             };
@@ -283,7 +280,7 @@ export class User extends Contactable {
             5: rand,
             6: buildSyncCookie(this.c.sig.session.readUInt32BE()),
         });
-        const payload = await this.c.sendUni("MessageSvc.PbSendMsg", body);
+        const payload = await this.c.sendUni('MessageSvc.PbSendMsg', body);
         const rsp = pb.decode(payload);
         if (rsp[1] !== 0) {
             this.c.logger.error(`failed to send: [Private: ${this.uid}] ${rsp[2]}(${rsp[1]})`);
@@ -294,7 +291,7 @@ export class User extends Contactable {
         const time = rsp[3];
         const message_id = genDmMessageId(this.uid, seq, rand, rsp[3], 1);
         const messageRet: MessageRet = { message_id, seq, rand, time };
-        this.c.emit("send", messageRet);
+        this.c.emit('send', messageRet);
         return messageRet;
     }
 
@@ -303,7 +300,7 @@ export class User extends Contactable {
      * @param seq 申请消息序号
      * @param remark 好友备注
      */
-    async addFriendBack(seq: number, remark = "") {
+    async addFriendBack(seq: number, remark = '') {
         const body = pb.encode({
             1: 1,
             2: Number(seq),
@@ -317,7 +314,7 @@ export class User extends Contactable {
                 52: String(remark),
             },
         });
-        const payload = await this.c.sendUni("ProfileService.Pb.ReqSystemMsgAction.Friend", body);
+        const payload = await this.c.sendUni('ProfileService.Pb.ReqSystemMsgAction.Friend', body);
         return pb.decode(payload)[1][1] === 0;
     }
 
@@ -328,7 +325,7 @@ export class User extends Contactable {
      * @param remark 好友备注
      * @param block 是否屏蔽来自此用户的申请
      */
-    async setFriendReq(seq: number, yes = true, remark = "", block = false) {
+    async setFriendReq(seq: number, yes = true, remark = '', block = false) {
         const body = pb.encode({
             1: 1,
             2: Number(seq),
@@ -342,7 +339,7 @@ export class User extends Contactable {
                 53: block ? 1 : 0,
             },
         });
-        const payload = await this.c.sendUni("ProfileService.Pb.ReqSystemMsgAction.Friend", body);
+        const payload = await this.c.sendUni('ProfileService.Pb.ReqSystemMsgAction.Friend', body);
         return pb.decode(payload)[1][1] === 0;
     }
 
@@ -354,7 +351,7 @@ export class User extends Contactable {
      * @param reason 若拒绝，拒绝的原因
      * @param block 是否屏蔽来自此用户的申请
      */
-    async setGroupReq(gid: number, seq: number, yes = true, reason = "", block = false) {
+    async setGroupReq(gid: number, seq: number, yes = true, reason = '', block = false) {
         const body = pb.encode({
             1: 1,
             2: Number(seq),
@@ -370,7 +367,7 @@ export class User extends Contactable {
                 53: block ? 1 : 0,
             },
         });
-        const payload = await this.c.sendUni("ProfileService.Pb.ReqSystemMsgAction.Group", body);
+        const payload = await this.c.sendUni('ProfileService.Pb.ReqSystemMsgAction.Group', body);
         return pb.decode(payload)[1][1] === 0;
     }
 
@@ -396,7 +393,7 @@ export class User extends Contactable {
                 53: block ? 1 : 0,
             },
         });
-        const payload = await this.c.sendUni("ProfileService.Pb.ReqSystemMsgAction.Group", body);
+        const payload = await this.c.sendUni('ProfileService.Pb.ReqSystemMsgAction.Group', body);
         return pb.decode(payload)[1][1] === 0;
     }
 
@@ -417,14 +414,14 @@ export class User extends Contactable {
             99999: { 1: 90200 },
         });
         const payload = await this.c.sendUni(
-            "OfflineFilleHandleSvr.pb_ftn_CMD_REQ_APPLY_DOWNLOAD-1200",
+            'OfflineFilleHandleSvr.pb_ftn_CMD_REQ_APPLY_DOWNLOAD-1200',
             body,
         );
         const rsp = pb.decode(payload)[14];
         if (rsp[10] !== 0) drop(ErrorCode.OfflineFileNotExists, rsp[20]);
         const obj = rsp[30];
         let url = String(obj[50]);
-        if (!url.startsWith("http")) url = `http://${obj[30]}:${obj[40]}` + url;
+        if (!url.startsWith('http')) url = `http://${obj[30]}:${obj[40]}` + url;
         return {
             name: String(rsp[40][7]),
             fid: String(rsp[40][6]),
@@ -432,7 +429,7 @@ export class User extends Contactable {
             size: rsp[40][3] as number,
             duration: rsp[40][4] as number,
             url,
-        } as Omit<FileElem, "type"> & Record<"url", string>;
+        } as Omit<FileElem, 'type'> & Record<'url', string>;
     }
 
     /**
@@ -446,39 +443,39 @@ export class User extends Contactable {
 
 /** 私聊消息事件 */
 export interface PrivateMessageEventMap {
-    "message"(event: PrivateMessageEvent): void;
+    'message'(event: PrivateMessageEvent): void;
     /** 好友的消息 */
-    "message.friend"(event: PrivateMessageEvent): void;
+    'message.friend'(event: PrivateMessageEvent): void;
     /** 群临时对话 */
-    "message.group"(event: PrivateMessageEvent): void;
+    'message.group'(event: PrivateMessageEvent): void;
     /** 其他途径 */
-    "message.other"(event: PrivateMessageEvent): void;
+    'message.other'(event: PrivateMessageEvent): void;
     /** 我的设备 */
-    "message.self"(event: PrivateMessageEvent): void;
+    'message.self'(event: PrivateMessageEvent): void;
 }
 /** 好友通知事件 */
 export interface FriendNoticeEventMap {
-    "notice"(
+    'notice'(
         event: FriendIncreaseEvent | FriendDecreaseEvent | FriendRecallEvent | FriendPokeEvent,
     ): void;
     /** 新增好友 */
-    "notice.increase"(event: FriendIncreaseEvent): void;
+    'notice.increase'(event: FriendIncreaseEvent): void;
     /** 好友减少 */
-    "notice.decrease"(event: FriendDecreaseEvent): void;
+    'notice.decrease'(event: FriendDecreaseEvent): void;
     /** 撤回消息 */
-    "notice.recall"(event: FriendRecallEvent): void;
+    'notice.recall'(event: FriendRecallEvent): void;
     /** 戳一戳 */
-    "notice.poke"(event: FriendPokeEvent): void;
+    'notice.poke'(event: FriendPokeEvent): void;
 }
 /** 好友申请事件 */
 export interface FriendRequestEventMap {
-    "request"(event: FriendRequestEvent): void;
+    'request'(event: FriendRequestEvent): void;
     /** 群邀请 */
-    "request.invite"(event: GroupInviteEvent): void;
+    'request.invite'(event: GroupInviteEvent): void;
     /** 添加好友 */
-    "request.add"(event: FriendRequestEvent): void;
+    'request.add'(event: FriendRequestEvent): void;
     /** 单向好友 */
-    "request.single"(event: FriendRequestEvent): void;
+    'request.single'(event: FriendRequestEvent): void;
 }
 /** 所有的好友事件 */
 export interface FriendEventMap
@@ -524,24 +521,20 @@ export class Friend extends User {
         return this.c.classes.get(this.info?.class_id!);
     }
 
-    protected constructor(
-        c: Client,
-        uid: number,
-        private _info?: FriendInfo,
-    ) {
+    protected constructor(c: Client, uid: number, private _info?: FriendInfo) {
         super(c, uid);
-        hide(this, "_info");
+        hide(this, '_info');
     }
 
     /** 设置备注 */
     async setRemark(remark: string) {
-        const req = jce.encodeStruct([this.uid, String(remark || "")]);
+        const req = jce.encodeStruct([this.uid, String(remark || '')]);
         const body = jce.encodeWrapper(
             { req },
-            "KQQ.ProfileService.ProfileServantObj",
-            "ChangeFriendName",
+            'KQQ.ProfileService.ProfileServantObj',
+            'ChangeFriendName',
         );
-        await this.c.sendUni("ProfileService.ChangeFriendName", body);
+        await this.c.sendUni('ProfileService.ChangeFriendName', body);
     }
 
     /** 设置分组(注意：如果分组id不存在也会成功) */
@@ -553,10 +546,10 @@ export class Friend extends User {
         const MovGroupMemReq = jce.encodeStruct([this.c.uin, 0, buf]);
         const body = jce.encodeWrapper(
             { MovGroupMemReq },
-            "mqq.IMService.FriendListServiceServantObj",
-            "MovGroupMemReq",
+            'mqq.IMService.FriendListServiceServantObj',
+            'MovGroupMemReq',
         );
-        await this.c.sendUni("friendlist.MovGroupMemReq", body);
+        await this.c.sendUni('friendlist.MovGroupMemReq', body);
     }
 
     /** 戳一戳 */
@@ -565,7 +558,7 @@ export class Friend extends User {
             1: self ? this.c.uin : this.uid,
             5: this.uid,
         });
-        const payload = await this.c.sendOidb("OidbSvc.0xed3", body);
+        const payload = await this.c.sendOidb('OidbSvc.0xed3', body);
         return pb.decode(payload)[3] === 0;
     }
 
@@ -577,10 +570,10 @@ export class Friend extends User {
         const DF = jce.encodeStruct([this.c.uin, this.uid, 2, block ? 1 : 0]);
         const body = jce.encodeWrapper(
             { DF },
-            "mqq.IMService.FriendListServiceServantObj",
-            "DelFriendReq",
+            'mqq.IMService.FriendListServiceServantObj',
+            'DelFriendReq',
         );
-        const payload = await this.c.sendUni("friendlist.delFriend", body);
+        const payload = await this.c.sendUni('friendlist.delFriend', body);
         this.c.sl.delete(this.uid);
         return jce.decodeWrapper(payload)[2] === 0;
     }
@@ -602,7 +595,7 @@ export class Friend extends User {
             if (!Buffer.isBuffer(file)) file = Buffer.from(file);
             filesize = file.length;
             (filemd5 = md5(file)), (filesha = sha(file));
-            filename = filename ? String(filename) : "file" + filemd5.toString("hex");
+            filename = filename ? String(filename) : 'file' + filemd5.toString('hex');
             filestream = Readable.from(file, { objectMode: false, highWaterMark: 524288 });
         } else {
             file = String(file);
@@ -622,7 +615,7 @@ export class Friend extends User {
                 50: filemd5,
                 60: filesha,
                 70:
-                    "/storage/emulated/0/Android/data/com.tencent.mobileqq/Tencent/QQfile_recv/" +
+                    '/storage/emulated/0/Android/data/com.tencent.mobileqq/Tencent/QQfile_recv/' +
                     filename,
                 80: 0,
                 90: 0,
@@ -634,7 +627,7 @@ export class Friend extends User {
             200: 1,
         });
         const payload = await this.c.sendUni(
-            "OfflineFilleHandleSvr.pb_ftn_CMD_REQ_APPLY_UPLOAD_V3-1700",
+            'OfflineFilleHandleSvr.pb_ftn_CMD_REQ_APPLY_UPLOAD_V3-1700',
             body1700,
         );
         const rsp1700 = pb.decode(payload)[19];
@@ -667,7 +660,7 @@ export class Friend extends User {
                         100: 2,
                         200: String(this.c.apk.subid),
                         300: 2,
-                        400: "d92615c5",
+                        400: 'd92615c5',
                         600: 4,
                     },
                     400: {
@@ -696,7 +689,7 @@ export class Friend extends User {
             101: 3,
             102: 104,
         });
-        await this.c.sendUni("OfflineFilleHandleSvr.pb_ftn_CMD_REQ_UPLOAD_SUCC-800", body800);
+        await this.c.sendUni('OfflineFilleHandleSvr.pb_ftn_CMD_REQ_UPLOAD_SUCC-800', body800);
         const proto3 = {
             2: {
                 1: {
@@ -730,7 +723,7 @@ export class Friend extends User {
             200: 1,
         });
         const payload = await this.c.sendUni(
-            "OfflineFilleHandleSvr.pb_ftn_CMD_REQ_RECALL-400",
+            'OfflineFilleHandleSvr.pb_ftn_CMD_REQ_RECALL-400',
             body,
         );
         const rsp = pb.decode(payload)[6];
@@ -756,7 +749,7 @@ export class Friend extends User {
                     6: this.uid,
                 },
             });
-            const payload = await this.c.sendOidbSvcTrpcTcp("OidbSvcTrpcTcp.0x6d9_2", body);
+            const payload = await this.c.sendOidbSvcTrpcTcp('OidbSvcTrpcTcp.0x6d9_2', body);
             const rsp = payload[3];
             if (rsp[1] !== 0) drop(rsp[1], rsp[2]);
             new_fid = rsp[4];
@@ -766,7 +759,7 @@ export class Friend extends User {
                     1: {
                         1: 0,
                         3: new_fid,
-                        4: Buffer.from(info.md5, "hex"),
+                        4: Buffer.from(info.md5, 'hex'),
                         5: info.name,
                         6: info.size,
                         9: 1,
@@ -788,7 +781,7 @@ export class Friend extends User {
                 200: 1,
             });
             const payload = await this.c.sendUni(
-                "OfflineFilleHandleSvr.pb_ftn_CMD_REQ_APPLY_FORWARD_FILE-700",
+                'OfflineFilleHandleSvr.pb_ftn_CMD_REQ_APPLY_FORWARD_FILE-700',
                 body,
             );
             const rsp = pb.decode(payload)[9];
@@ -801,7 +794,7 @@ export class Friend extends User {
                     1: {
                         1: 0,
                         3: new_fid,
-                        4: Buffer.from(info.md5, "hex"),
+                        4: Buffer.from(info.md5, 'hex'),
                         5: info.name,
                         6: info.size,
                         9: 1,
@@ -819,51 +812,51 @@ export class Friend extends User {
      * @returns
      */
     async searchSameGroup() {
-        let body = pb.encode({
-            "1": 3316,
-            "2": 0,
-            "3": 0,
-            "4": {
-                "1": this.c.uin,
-                "2": this.uid,
-                "4": 1,
-                "5": [
+        const body = pb.encode({
+            '1': 3316,
+            '2': 0,
+            '3': 0,
+            '4': {
+                '1': this.c.uin,
+                '2': this.uid,
+                '4': 1,
+                '5': [
                     {
-                        "3": {
-                            "1": this.c.uin,
-                            "2": this.uid,
+                        '3': {
+                            '1': this.c.uin,
+                            '2': this.uid,
                         },
-                        "5": 3436,
+                        '5': 3436,
                     },
                     {
-                        "3": {
-                            "1": {
-                                "1": {
-                                    "6": `${this.uid}`,
+                        '3': {
+                            '1': {
+                                '1': {
+                                    '6': `${this.uid}`,
                                 },
-                                "2": 1,
+                                '2': 1,
                             },
                         },
-                        "5": 3460,
+                        '5': 3460,
                     },
                 ],
-                "6": 0,
+                '6': 0,
             },
-            "6": "android 8.9.28",
+            '6': 'android 8.9.28',
         });
 
-        const payload = await this.c.sendUni("OidbSvc.0xcf4", body);
-        let res = await decodePb(payload);
+        const payload = await this.c.sendUni('OidbSvc.0xcf4', body);
+        const res = await decodePb(payload);
         //console.log();
         //console.log((res as any)[4][12]);
         if (!(res as any)[4][12][1]) {
             return [];
         }
 
-        return (res as any)[4][12][1].map((item: { "1": number; "3": string }) => {
+        return (res as any)[4][12][1].map((item: { '1': number; '3': string }) => {
             return {
-                groupName: item["3"],
-                Group_Id: item["1"],
+                groupName: item['3'],
+                Group_Id: item['1'],
             };
         });
     }

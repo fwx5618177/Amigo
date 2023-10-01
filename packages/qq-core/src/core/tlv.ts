@@ -1,39 +1,40 @@
-import * as crypto from "crypto"
-import * as tea from "./tea"
-import * as pb from "./protobuf"
-import Writer from "./writer"
-import { md5, BUF0 } from "./constants"
-import { sign } from "../internal/enctyption"
-import { Apk, Device, getApkInfo, Platform, ShortDevice } from "./device"
+import * as crypto from 'crypto';
+import * as tea from './tea';
+import * as pb from './protobuf';
+import Writer from './writer';
+import { md5, BUF0 } from './constants';
+import { sign } from '../internal/enctyption';
+import { Apk, Device, getApkInfo, Platform, ShortDevice } from './device';
 
-type BaseClient = import("./base-client").BaseClient
+type BaseClient = import('./base-client').BaseClient;
 
 function packTlv(this: BaseClient, tag: number, ...args: any[]) {
-    const t = map[tag].apply(this, args)
-    const lbuf = Buffer.allocUnsafe(2)
-    lbuf.writeUInt16BE(t.readableLength)
-    t.unshift(lbuf)
-    const tbuf = Buffer.allocUnsafe(2)
-    tbuf.writeUInt16BE(tag)
-    t.unshift(tbuf)
-    return t.read() as Buffer
+    const t = map[tag].apply(this, args);
+    const lbuf = Buffer.allocUnsafe(2);
+    lbuf.writeUInt16BE(t.readableLength);
+    t.unshift(lbuf);
+    const tbuf = Buffer.allocUnsafe(2);
+    tbuf.writeUInt16BE(tag);
+    t.unshift(tbuf);
+    return t.read() as Buffer;
 }
 
 function createSalt(this: BaseClient, n: string) {
-    const subCmd = parseInt(n.split('_')[1])
-    if (['810_9'].includes(n)) return new Writer()
-        .writeU32(0)
-        .writeBytes(this.device.guid)
-        .writeBytes(this.apk.sdkver)
-        .writeU32(subCmd)
-        .writeU32(0)
-        .read()
+    const subCmd = parseInt(n.split('_')[1]);
+    if (['810_9'].includes(n))
+        return new Writer()
+            .writeU32(0)
+            .writeBytes(this.device.guid)
+            .writeBytes(this.apk.sdkver)
+            .writeU32(subCmd)
+            .writeU32(0)
+            .read();
     return new Writer()
         .writeU32(this.uin)
         .writeBytes(this.device.guid)
         .writeBytes(this.apk.sdkver)
         .writeU32(subCmd)
-        .read()
+        .read();
 }
 
 const map: { [tag: number]: (this: BaseClient, ...args: any[]) => Writer } = {
@@ -50,7 +51,7 @@ const map: { [tag: number]: (this: BaseClient, ...args: any[]) => Writer } = {
         return new Writer()
             .writeU16(0)
             .writeU32(2052) //localId
-            .writeU16(0)
+            .writeU16(0);
     },
     0x16: function () {
         const Watch = getApkInfo(Platform.Watch);
@@ -73,7 +74,7 @@ const map: { [tag: number]: (this: BaseClient, ...args: any[]) => Writer } = {
             .writeU16(0)
             .writeU16(0);
     },
-    0x1B: function () {
+    0x1b: function () {
         return new Writer()
             .writeU32(0)
             .writeU32(0)
@@ -84,29 +85,24 @@ const map: { [tag: number]: (this: BaseClient, ...args: any[]) => Writer } = {
             .writeU32(2)
             .writeU16(0);
     },
-    0x1D: function () {
-        return new Writer()
-            .writeU8(1)
-            .writeU32(this.apk.bitmap)
-            .writeU32(0)
-            .writeU8(0)
-            .writeU32(0)
+    0x1d: function () {
+        return new Writer().writeU8(1).writeU32(this.apk.bitmap).writeU32(0).writeU8(0).writeU32(0);
     },
-    0x1F: function () {
+    0x1f: function () {
         return new Writer()
             .writeU8(0) // isRoot
-            .writeTlv("android") // OS type
-            .writeTlv("7.1.2") // OS version
+            .writeTlv('android') // OS type
+            .writeTlv('7.1.2') // OS version
             .writeU16(2) // Network Type
-            .writeTlv("China Mobile GSM") // simOperatorName
+            .writeTlv('China Mobile GSM') // simOperatorName
             .writeTlv(BUF0)
-            .writeTlv("wifi") // APN
+            .writeTlv('wifi'); // APN
     },
     0x33: function () {
-        return new Writer().writeBytes(this.device.guid)
+        return new Writer().writeBytes(this.device.guid);
     },
     0x35: function (deviceType: number) {
-        return new Writer().writeU32(deviceType)
+        return new Writer().writeU32(deviceType);
     },
     0x100: function (sub_id: number) {
         return new Writer()
@@ -118,7 +114,7 @@ const map: { [tag: number]: (this: BaseClient, ...args: any[]) => Writer } = {
             .writeU32(this.apk.main_sig_map);
     },
     0x104: function () {
-        return new Writer().writeBytes(this.sig.t104)
+        return new Writer().writeBytes(this.sig.t104);
     },
     0x106: function (md5pass: Buffer) {
         const body = new Writer()
@@ -141,28 +137,28 @@ const map: { [tag: number]: (this: BaseClient, ...args: any[]) => Writer } = {
             .writeTlv(String(this.uin))
             .writeU16(0)
             .read();
-        const buf = Buffer.alloc(4)
-        buf.writeUInt32BE(this.uin)
-        const key = md5(Buffer.concat([
-            md5pass, Buffer.alloc(4), buf
-        ]))
-        return new Writer().writeBytes(tea.encrypt(body, key))
+        const buf = Buffer.alloc(4);
+        buf.writeUInt32BE(this.uin);
+        const key = md5(Buffer.concat([md5pass, Buffer.alloc(4), buf]));
+        return new Writer().writeBytes(tea.encrypt(body, key));
     },
     0x107: function () {
         return new Writer()
-            .writeU16(0)    // pic type
-            .writeU8(0)     // captcha type
-            .writeU16(0)    // pic size
-            .writeU8(1)     // ret type
+            .writeU16(0) // pic type
+            .writeU8(0) // captcha type
+            .writeU16(0) // pic size
+            .writeU8(1); // ret type
     },
     0x108: function () {
-        return new Writer().writeBytes(this.sig.ksid || Buffer.from(`|${this.device.imei}|${this.apk.name}`));
+        return new Writer().writeBytes(
+            this.sig.ksid || Buffer.from(`|${this.device.imei}|${this.apk.name}`),
+        );
     },
     0x109: function () {
-        return new Writer().writeBytes(md5(this.device.imei))
+        return new Writer().writeBytes(md5(this.device.imei));
     },
     0x10a: function () {
-        return new Writer().writeBytes(this.sig.tgt)
+        return new Writer().writeBytes(this.sig.tgt);
     },
     0x112: function () {
         return new Writer().writeTlv(String(this.uin));
@@ -173,7 +169,7 @@ const map: { [tag: number]: (this: BaseClient, ...args: any[]) => Writer } = {
             .writeU32(this.apk.bitmap)
             .writeU32(this.apk.sub_sig_map) // sub sigmap
             .writeU8(1) // size of app id list
-            .writeU32(1600000226) // app id list[0]
+            .writeU32(1600000226); // app id list[0]
     },
     0x124: function () {
         return new Writer()
@@ -182,7 +178,7 @@ const map: { [tag: number]: (this: BaseClient, ...args: any[]) => Writer } = {
             .writeU16(2) // network type
             .writeTlv(this.device.sim.slice(0, 16))
             .writeU16(0)
-            .writeTlv(this.device.apn.slice(0, 16))
+            .writeTlv(this.device.apn.slice(0, 16));
     },
     0x128: function () {
         return new Writer()
@@ -193,22 +189,20 @@ const map: { [tag: number]: (this: BaseClient, ...args: any[]) => Writer } = {
             .writeU32(16777216) // guid flag
             .writeTlv(this.device.model.slice(0, 32))
             .writeTlv(this.device.guid.slice(0, 16))
-            .writeTlv(this.device.brand.slice(0, 16))
+            .writeTlv(this.device.brand.slice(0, 16));
     },
     0x141: function () {
         return new Writer()
             .writeU16(1) // ver
             .writeTlv(this.device.sim)
             .writeU16(2) // network type
-            .writeTlv(this.device.apn)
+            .writeTlv(this.device.apn);
     },
     0x142: function () {
-        return new Writer()
-            .writeU16(0)
-            .writeTlv(this.apk.id.slice(0, 32))
+        return new Writer().writeU16(0).writeTlv(this.apk.id.slice(0, 32));
     },
     0x143: function () {
-        return new Writer().writeBytes(this.sig.d2)
+        return new Writer().writeBytes(this.sig.d2);
     },
     0x144: function () {
         const body = new Writer()
@@ -217,66 +211,61 @@ const map: { [tag: number]: (this: BaseClient, ...args: any[]) => Writer } = {
             .writeBytes(packTlv.call(this, 0x52d))
             .writeBytes(packTlv.call(this, 0x124))
             .writeBytes(packTlv.call(this, 0x128))
-            .writeBytes(packTlv.call(this, 0x16e))
-        return new Writer().writeBytes(tea.encrypt(body.read(), this.sig.tgtgt))
+            .writeBytes(packTlv.call(this, 0x16e));
+        return new Writer().writeBytes(tea.encrypt(body.read(), this.sig.tgtgt));
     },
     0x145: function () {
-        return new Writer().writeBytes(this.device.guid)
+        return new Writer().writeBytes(this.device.guid);
     },
     0x147: function () {
-        return new Writer()
-            .writeU32(this.apk.appid).writeTlv(this.apk.ver)
-            .writeTlv(this.apk.sign)
+        return new Writer().writeU32(this.apk.appid).writeTlv(this.apk.ver).writeTlv(this.apk.sign);
     },
     0x154: function () {
-        return new Writer().writeU32(this.sig.seq + 1)
+        return new Writer().writeU32(this.sig.seq + 1);
     },
     0x16a: function (srm_token) {
-        return new Writer().writeBytes(srm_token || this.sig.srm_token)
+        return new Writer().writeBytes(srm_token || this.sig.srm_token);
     },
     0x16e: function () {
-        return new Writer().writeBytes(this.device.model)
+        return new Writer().writeBytes(this.device.model);
     },
     0x174: function () {
-        return new Writer().writeBytes(this.sig.t174)
+        return new Writer().writeBytes(this.sig.t174);
     },
     0x177: function () {
-        return new Writer()
-            .writeU8(0x01)
-            .writeU32(this.apk.buildtime)
-            .writeTlv(this.apk.sdkver)
+        return new Writer().writeU8(0x01).writeU32(this.apk.buildtime).writeTlv(this.apk.sdkver);
     },
     0x17a: function () {
-        return new Writer().writeU32(9)
+        return new Writer().writeU32(9);
     },
     0x17c: function (code) {
-        return new Writer().writeTlv(code)
+        return new Writer().writeTlv(code);
     },
     0x187: function () {
-        return new Writer().writeBytes(md5(this.device.mac_address))
+        return new Writer().writeBytes(md5(this.device.mac_address));
     },
     0x188: function () {
-        return new Writer().writeBytes(md5(this.device.android_id))
+        return new Writer().writeBytes(md5(this.device.android_id));
     },
     0x191: function () {
-        return new Writer().writeU8(0x82)
+        return new Writer().writeU8(0x82);
     },
     0x193: function (ticket) {
-        return new Writer().writeBytes(ticket)
+        return new Writer().writeBytes(ticket);
     },
     0x194: function () {
-        return new Writer().writeBytes(this.device.imsi)
+        return new Writer().writeBytes(this.device.imsi);
     },
     0x197: function () {
-        return new Writer().writeTlv(Buffer.alloc(1))
+        return new Writer().writeTlv(Buffer.alloc(1));
     },
     0x198: function () {
-        return new Writer().writeTlv(Buffer.alloc(1))
+        return new Writer().writeTlv(Buffer.alloc(1));
     },
     0x202: function () {
         return new Writer()
             .writeTlv(this.device.wifi_bssid.slice(0, 16))
-            .writeTlv(this.device.wifi_ssid.slice(0, 32))
+            .writeTlv(this.device.wifi_ssid.slice(0, 32));
     },
     0x400: function () {
         return new Writer()
@@ -287,49 +276,48 @@ const map: { [tag: number]: (this: BaseClient, ...args: any[]) => Writer } = {
             .write32(1)
             .write32(16)
             .write32((Date.now() / 1000) & 0xffffffff)
-            .writeBytes(Buffer.alloc(0))
+            .writeBytes(Buffer.alloc(0));
     },
     0x401: function () {
-        return new Writer().writeBytes(crypto.randomBytes(16))
+        return new Writer().writeBytes(crypto.randomBytes(16));
     },
     0x511: function () {
         const domains = new Set<Domain>([
-            "aq.qq.com",
+            'aq.qq.com',
             // "buluo.qq.com",
-            "connect.qq.com",
-            "docs.qq.com",
-            "game.qq.com",
-            "gamecenter.qq.com",
+            'connect.qq.com',
+            'docs.qq.com',
+            'game.qq.com',
+            'gamecenter.qq.com',
             // "graph.qq.com",
-            "haoma.qq.com",
-            "id.qq.com",
+            'haoma.qq.com',
+            'id.qq.com',
             // "imgcache.qq.com",
-            "kg.qq.com",
-            "mail.qq.com",
-            "mma.qq.com",
-            "office.qq.com",
+            'kg.qq.com',
+            'mail.qq.com',
+            'mma.qq.com',
+            'office.qq.com',
             // "om.qq.com",
-            "openmobile.qq.com",
-            "qqweb.qq.com",
-            "qun.qq.com",
-            "qzone.qq.com",
-            "ti.qq.com",
-            "v.qq.com",
-            "vip.qq.com",
-            "y.qq.com",
-        ])
-        const stream = new Writer().writeU16(domains.size)
-        for (let v of domains)
-            stream.writeU8(0x01).writeTlv(v)
-        return stream
+            'openmobile.qq.com',
+            'qqweb.qq.com',
+            'qun.qq.com',
+            'qzone.qq.com',
+            'ti.qq.com',
+            'v.qq.com',
+            'vip.qq.com',
+            'y.qq.com',
+        ]);
+        const stream = new Writer().writeU16(domains.size);
+        for (const v of domains) stream.writeU8(0x01).writeTlv(v);
+        return stream;
     },
     0x516: function () {
-        return new Writer().writeU32(0)
+        return new Writer().writeU32(0);
     },
     0x521: function (type: number) {
         return new Writer()
             .writeU32(type) // product type
-            .writeU16(0) // const
+            .writeU16(0); // const
     },
     0x525: function () {
         return new Writer()
@@ -338,11 +326,10 @@ const map: { [tag: number]: (this: BaseClient, ...args: any[]) => Writer } = {
             .writeTlv(Buffer.from([0x2, 0x1, 0x0])); // zero
     },
     0x523: function () {
-        return new Writer()
-            .writeTlv(Buffer.from([0x1, 0x0]))
+        return new Writer().writeTlv(Buffer.from([0x1, 0x0]));
     },
     0x52d: function () {
-        const d = this.device
+        const d = this.device;
         const buf = pb.encode({
             1: d.bootloader,
             2: d.proc_version,
@@ -353,30 +340,30 @@ const map: { [tag: number]: (this: BaseClient, ...args: any[]) => Writer } = {
             7: d.android_id,
             8: d.baseband,
             9: d.version.incremental,
-        })
-        return new Writer().writeBytes(buf)
+        });
+        return new Writer().writeBytes(buf);
     },
     0x542: function () {
-        return new Writer().writeBytes(Buffer.from([0x4A, 0x02, 0x60, 0x01]));
+        return new Writer().writeBytes(Buffer.from([0x4a, 0x02, 0x60, 0x01]));
     },
     0x544: function (v: number, subCmd: number, signData: Buffer = BUF0) {
         if (v == -1) {
-            return new Writer().writeBytes(signData)
+            return new Writer().writeBytes(signData);
         }
-        const salt = new Writer()
+        const salt = new Writer();
         if (v === 2) {
-            salt.writeU32(0)
-            salt.writeTlv(this.device.guid)
-            salt.writeTlv(Buffer.from(this.apk.sdkver))
-            salt.writeU32(subCmd)
-            salt.writeU32(0)
+            salt.writeU32(0);
+            salt.writeTlv(this.device.guid);
+            salt.writeTlv(Buffer.from(this.apk.sdkver));
+            salt.writeU32(subCmd);
+            salt.writeU32(0);
         } else {
-            salt.writeU64(this.uin)
-            salt.writeTlv(this.device.guid)
-            salt.writeTlv(Buffer.from(this.apk.sdkver))
-            salt.writeU32(subCmd)
+            salt.writeU64(this.uin);
+            salt.writeTlv(this.device.guid);
+            salt.writeTlv(Buffer.from(this.apk.sdkver));
+            salt.writeU32(subCmd);
         }
-        return new Writer().writeBytes(sign((new Date()).getTime(), salt.read()))
+        return new Writer().writeBytes(sign(new Date().getTime(), salt.read()));
     },
     0x545: function (qImei) {
         return new Writer().writeBytes(md5(qImei || this.device.imei));
@@ -388,11 +375,11 @@ const map: { [tag: number]: (this: BaseClient, ...args: any[]) => Writer } = {
         // copy from https://github.com/Icalingua-plus-plus/oicq-icalingua-plus-plus/blob/master/lib/wtlogin/tlv.js
         const src = crypto.randomBytes(128);
         while (src[0] === 0 || src[0] === 255) src[0] = crypto.randomBytes(1)[0];
-        const srcNum = BigInt('0x' + src.toString("hex"));
+        const srcNum = BigInt('0x' + src.toString('hex'));
         const cnt = 10000;
         const dstNum = srcNum + BigInt(cnt);
-        const dst = Buffer.from(dstNum.toString(16).padStart(256, "0"), "hex");
-        const tgt = crypto.createHash("sha256").update(dst).digest();
+        const dst = Buffer.from(dstNum.toString(16).padStart(256, '0'), 'hex');
+        const tgt = crypto.createHash('sha256').update(dst).digest();
         const writer = new Writer()
             .writeU8(1) //version
             .writeU8(2) //typ
@@ -401,42 +388,40 @@ const map: { [tag: number]: (this: BaseClient, ...args: any[]) => Writer } = {
             .writeU16(10) //maxIndex
             .writeBytes(Buffer.from([0, 0])) //reserveBytes
             .writeTlv(src)
-            .writeTlv(tgt)
+            .writeTlv(tgt);
         const cpy = writer.read();
-        const t546 = writer
-            .writeBytes(cpy)
-            .writeTlv(cpy)
-            .read();
+        const t546 = writer.writeBytes(cpy).writeTlv(cpy).read();
         const t548 = this.calcPoW(t546);
         return new Writer().writeBytes(t548);
-    }
-}
+    },
+};
 
 export function getPacker(c: BaseClient) {
-    return packTlv.bind(c)
+    return packTlv.bind(c);
 }
 
-export type Domain = "aq.qq.com"
-    | "buluo.qq.com"
-    | "connect.qq.com"
-    | "docs.qq.com"
-    | "game.qq.com"
-    | "gamecenter.qq.com"
+export type Domain =
+    | 'aq.qq.com'
+    | 'buluo.qq.com'
+    | 'connect.qq.com'
+    | 'docs.qq.com'
+    | 'game.qq.com'
+    | 'gamecenter.qq.com'
     // | "graph.qq.com"
-    | "haoma.qq.com"
-    | "id.qq.com"
+    | 'haoma.qq.com'
+    | 'id.qq.com'
     // | "imgcache.qq.com"
-    | "kg.qq.com"
-    | "mail.qq.com"
-    | "mma.qq.com"
-    | "office.qq.com"
+    | 'kg.qq.com'
+    | 'mail.qq.com'
+    | 'mma.qq.com'
+    | 'office.qq.com'
     // | "om.qq.com"
-    | "openmobile.qq.com"
-    | "qqweb.qq.com"
-    | "qun.qq.com"
-    | "qzone.qq.com"
-    | "ti.qq.com"
-    | "v.qq.com"
-    | "vip.qq.com"
-    | "y.qq.com"
-    | ""
+    | 'openmobile.qq.com'
+    | 'qqweb.qq.com'
+    | 'qun.qq.com'
+    | 'qzone.qq.com'
+    | 'ti.qq.com'
+    | 'v.qq.com'
+    | 'vip.qq.com'
+    | 'y.qq.com'
+    | '';

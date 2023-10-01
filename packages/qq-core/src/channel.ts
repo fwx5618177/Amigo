@@ -1,10 +1,10 @@
-import { randomBytes } from "crypto";
-import { GuildMessageRet } from "./internal";
-import { Guild } from "./guild";
-import { ApiRejection, pb } from "./core";
-import { lock } from "./core/constants";
-import { buildMusic, Converter, MusicPlatform, Sendable } from "./message";
-import { buildShare, ShareConfig, ShareContent } from "./message/share";
+import { randomBytes } from 'crypto';
+import { GuildMessageRet } from './internal';
+import { Guild } from './guild';
+import { ApiRejection, pb } from './core';
+import { lock } from './core/constants';
+import { buildMusic, Converter, MusicPlatform, Sendable } from './message';
+import { buildShare, ShareConfig, ShareContent } from './message/share';
 
 /** 通知类型 */
 export enum NotifyType {
@@ -35,18 +35,15 @@ export enum ChannelType {
 /** 子频道 */
 export class Channel {
     /** 子频道名 */
-    channel_name = "";
+    channel_name = '';
     /** 频道类型 */
     channel_type = ChannelType.Unknown;
     /** 通知类型 */
     notify_type = NotifyType.Unknown;
 
-    constructor(
-        public readonly guild: Guild,
-        public readonly channel_id: string,
-    ) {
-        lock(this, "guild");
-        lock(this, "channel_id");
+    constructor(public readonly guild: Guild, public readonly channel_id: string) {
+        lock(this, 'guild');
+        lock(this, 'channel_id');
     }
     get c() {
         return this.guild.c;
@@ -60,13 +57,13 @@ export class Channel {
     /** 发送网址分享 */
     async shareUrl(content: ShareContent, config?: ShareConfig) {
         const body = buildShare(this.channel_id, this.guild.guild_id, content, config);
-        await this.c.sendOidb("OidbSvc.0xb77_9", pb.encode(body));
+        await this.c.sendOidb('OidbSvc.0xb77_9', pb.encode(body));
     }
 
     /** 发送音乐分享 */
     async shareMusic(platform: MusicPlatform, id: string) {
         const body = await buildMusic(this.channel_id, this.guild.guild_id, platform, id);
-        await this.c.sendOidb("OidbSvc.0xb77_9", pb.encode(body));
+        await this.c.sendOidb('OidbSvc.0xb77_9', pb.encode(body));
     }
 
     /**
@@ -76,7 +73,7 @@ export class Channel {
     async sendMsg(content: Sendable): Promise<GuildMessageRet> {
         const { rich, brief } = new Converter(content);
         const payload = await this.c.sendUni(
-            "MsgProxy.SendMsg",
+            'MsgProxy.SendMsg',
             pb.encode({
                 1: {
                     1: {
@@ -117,7 +114,7 @@ export class Channel {
             2: Number(this.channel_id),
             3: Number(seq),
         });
-        await this.c.sendOidbSvcTrpcTcp("OidbSvcTrpcTcp.0xf5e_1", body);
+        await this.c.sendOidbSvcTrpcTcp('OidbSvcTrpcTcp.0xf5e_1', body);
         return true;
     }
 }

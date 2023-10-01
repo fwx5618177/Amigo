@@ -1,19 +1,21 @@
-import { MessageElem } from "./elements";
+import { MessageElem } from './elements';
 const mCQ = {
-    "&#91;": "[",
-    "&#93;": "]",
-    "&amp;": "&",
+    '&#91;': '[',
+    '&#93;': ']',
+    '&amp;': '&',
 };
 const mCQInside: Record<string, string> = {
-    "&": "&amp;",
-    ",": "&#44;",
-    "[": "&#91;",
-    "]": "&#93;",
+    '&': '&amp;',
+    ',': '&#44;',
+    '[': '&#91;',
+    ']': '&#93;',
 };
-const mCQInvert = Object.fromEntries(Object.keys(mCQInside).map((key) => {
-    return [mCQInside[key] as string, key]
-}))
-function matchBracket(text: string, index: number, brackets = ["[", "]"]) {
+const mCQInvert = Object.fromEntries(
+    Object.keys(mCQInside).map(key => {
+        return [mCQInside[key] as string, key];
+    }),
+);
+function matchBracket(text: string, index: number, brackets = ['[', ']']) {
     let stackSize = 0;
 
     if (text.length <= 2) {
@@ -56,19 +58,19 @@ function matchBracket(text: string, index: number, brackets = ["[", "]"]) {
 
     return -2;
 }
-export function fromCqcode(text = ""): MessageElem[] {
+export function fromCqcode(text = ''): MessageElem[] {
     const elems: MessageElem[] = [];
     const items = [];
     let itemsSize = 0;
 
     for (let i = 0; i < text.length; ++i) {
-        const brackets = ["[", "]"];
+        const brackets = ['[', ']'];
         const pos = matchBracket(text, i, brackets);
 
         switch (pos) {
             case -1:
                 if (undefined === items[itemsSize]) {
-                    items[itemsSize] = "";
+                    items[itemsSize] = '';
                 }
 
                 items[itemsSize] += text[i];
@@ -82,7 +84,7 @@ export function fromCqcode(text = ""): MessageElem[] {
                 break;
             case -5:
                 // This is impossible
-                throw `错误的括号匹配：${brackets.join("")}`;
+                throw `错误的括号匹配：${brackets.join('')}`;
             default:
                 if (pos > 0) {
                     items.push(text.substring(i, pos + 1));
@@ -93,11 +95,14 @@ export function fromCqcode(text = ""): MessageElem[] {
     }
 
     for (const c of items) {
-        const s = c.replace(new RegExp(Object.keys(mCQ).join("|"), "g"), ((s: keyof (typeof mCQ)) => mCQ[s] || "") as any);
-        let cq = c.replace("[CQ:", "type=");
+        const s = c.replace(
+            new RegExp(Object.keys(mCQ).join('|'), 'g'),
+            ((s: keyof typeof mCQ) => mCQ[s] || '') as any,
+        );
+        let cq = c.replace('[CQ:', 'type=');
 
-        if ("string" === typeof s && "" !== s && !s.includes("[CQ:")) {
-            elems.push({ type: "text", text: s });
+        if ('string' === typeof s && '' !== s && !s.includes('[CQ:')) {
+            elems.push({ type: 'text', text: s });
             continue;
         }
 
@@ -107,24 +112,24 @@ export function fromCqcode(text = ""): MessageElem[] {
 
     return elems;
 }
-export function qs(text: string, sep = ",", equal = "=") {
+export function qs(text: string, sep = ',', equal = '=') {
     const ret: Record<string, any> = {};
 
-    text.split(sep).forEach((c) => {
+    text.split(sep).forEach(c => {
         const i = c.indexOf(equal);
 
         if (-1 === i) {
             return;
         }
 
-        ret[c.substring(0, i) as keyof (typeof ret)] = c
+        ret[c.substring(0, i) as keyof typeof ret] = c
             .substring(i + 1)
-            .replace(new RegExp(Object.values(mCQInside).join("|"), "g"), (s) => mCQInvert[s] || "");
+            .replace(new RegExp(Object.values(mCQInside).join('|'), 'g'), s => mCQInvert[s] || '');
     });
 
     for (const k in ret) {
         try {
-            if ("text" !== k) {
+            if ('text' !== k) {
                 ret[k] = JSON.parse(ret[k]);
             }
         } catch (e) {
