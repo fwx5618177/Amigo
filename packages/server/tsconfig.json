@@ -1,0 +1,50 @@
+{
+    "compilerOptions": {
+        "target": "es2016",
+        "lib": ["DOM", "ES2017"],
+        "jsx": "preserve",
+        "experimentalDecorators": true,
+        "module": "CommonJS",
+        "rootDir": ".",
+        "moduleResolution": "node",
+        "baseUrl": ".",
+        "paths": {
+            "@/*": ["./*"],
+            "@config/*": ["./config/*"],
+            "@controllers/*": ["./controllers/*"],
+            "@middlewares/*": ["./middlewares/*"],
+            "@interfaces/*": ["./interfaces/*"],
+            "@routes/*": ["./routes/*"],
+            "@utils/*": ["./utils/*"],
+            "@services/*": ["./services/*"],
+            "@exceptions/*": ["./exceptions/*"],
+            "@dtos/*": ["./dtos/*"]
+        },
+        "resolveJsonModule": true,
+        "allowJs": true,
+
+        "sourceMap": true,
+
+        "outDir": "./dist",
+
+        "noEmit": true,
+
+        "isolatedModules": true,
+        "allowSyntheticDefaultImports": true,
+        "esModuleInterop": true,
+
+        "forceConsistentCasingInFileNames": true,
+
+        "strict": true,
+        "noImplicitAny": true,
+        "strictNullChecks": true,
+        "strictFunctionTypes": true,
+        "strictBindCallApply": true,
+        "strictPropertyInitialization": true,
+
+        "skipDefaultLibCheck": true,
+        "skipLibCheck": true
+    },
+    "include": ["**/*.ts"],
+    "exclude": ["./dist", "node_modules/**/*", "src/logs"]
+}

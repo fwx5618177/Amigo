@@ -8,7 +8,7 @@ TODO:
 2. 视频处理
    1. plugins
    2. server
-   3. cli prompt
-   4. front
-   5. db or others
-3. ci
+3. cli prompt
+4. front
+5. db or others
+6. CI/CD
