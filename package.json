@@ -15,15 +15,15 @@
     "prepare": "husky install",
     "preinstall": "npx -y only-allow pnpm",
     "clean": "rimraf ./node_modules **/*/node_modules && pnpm run clean:cache",
-    "clean:cache": "rimraf ./dist ./node_modules/.cache",
+    "clean:cache": "rimraf ./dist ./node_modules/.cache ./packages/*/dist ./packages/*/.cache",
+    "build": "pnpm -r run build",
+    "cli": "pnpm run clean:cache && pnpm run build && node ./packages/cli/dist/cli.js",
+    "release": "semantic-release",
+    "test": "pnpm -r run test",
     "lint": "eslint --ignore-path .gitignore --ext .ts .",
     "lint:fix": "eslint --ignore-path .gitignore --ext .ts --fix .",
     "prettier": "prettier --ignore-path .gitignore --write \"**/*.ts\"",
-    "start": "ts-node -r tsconfig-paths/register --transpile-only cli.ts",
-    "build": "pnpm recursive run build && tsc --resolveJsonModule -p tsconfig.json",
-    "cli": "pnpm run clean:cache && pnpm run build && node ./dist/cli.js",
-    "release": "semantic-release",
-    "test": "pnpm -r test"
+    "start": "ts-node -r tsconfig-paths/register --transpile-only cli.ts"
   },
   "keywords": [],
   "engines": {
@@ -59,7 +59,7 @@
     "@types/inquirer": "^9.0.3",
     "@types/mocha": "^10.0.1",
     "@types/node": "^20.2.5",
-    "@typescript-eslint/eslint-plugin": "^5.30.5",
+    "@typescript-eslint/eslint-plugin": "^6.7.3",
     "chai": "^4.3.7",
     "chalk": "^4.1.2",
     "eslint": "^8.19.0",
@@ -72,11 +72,5 @@
     "prettier": "^2.7.1",
     "rollup": "^3.29.4",
     "tsconfig-paths": "^4.0.0"
-  },
-  "husky": {
-    "hooks": {
-      "pre-commit": "lint-staged && pnpm run lint && pnpm run prettier && pnpm run build",
-      "pre-push": "pnpm run test"
-    }
   }
 }

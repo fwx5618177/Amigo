@@ -1,0 +1,96 @@
+name: Release Workflow
+
+on:
+    push:
+        branches:
+            - master # Trigger the workflow on push to master branch
+
+jobs:
+    release:
+        name: Release
+        runs-on: ubuntu-latest
+        steps:
+            - name: Checkout Code
+              uses: actions/checkout@v2
+              with:
+                  token: ${{ secrets.TOKEN }}
+                  fetch-depth: 0 # Fetch all history so that semantic-release can generate changelogs correctly
+
+            - name: Setup Node.js
+              uses: actions/setup-node@v2
+              with:
+                  node-version: 20.6.1
+
+            - name: Setup Pnpm
+              run: npm install -g pnpm@latest
+
+            - name: Cache Dependencies
+              uses: actions/cache@v2
+              with:
+                  path: ~/.pnpm-store
+                  key: ${{ runner.os }}-pnpm-${{ hashFiles('**/pnpm-lock.yaml') }}
+                  restore-keys: |
+                      ${{ runner.os }}-pnpm-
+
+            - name: Install Dependencies
+              run: pnpm install
+
+            - name: Build Project # Optionally build your project, if required
+              run: pnpm run build
+
+            - name: Release and Publish
+              id: semantic-release
+              env:
+                  GITHUB_TOKEN: ${{ secrets.TOKEN }}
+                  NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+              run: |
+                  pnpm run release || true
+                  if [ "$?" -eq "0" ]; then
+                    echo "::set-output name=publish::true"
+                  else
+                    echo "::set-output name=publish::false"
+                  fi
+
+            - name: Get version from package.json
+              id: version
+              run: echo "::set-output name=version::$(node -p "require('./package.json').version")"
+
+            - name: Send Email Notification
+              if: success() # Only send email if the previous steps were successful
+              uses: dawidd6/action-send-mail@v2
+              with:
+                  server_address: smtp.gmail.com
+                  server_port: 465
+                  username: ${{ secrets.EMAIL_USERNAME }}
+                  password: ${{ secrets.EMAIL_PASSWORD }}
+                  subject: New Release Published for ${{ github.repository }}
+                  body: |
+                      <h1>New Release Published</h1>
+                      <p>A new release has been published on <a href="${{ github.event.repository.html_url }}/releases/tag/v${{ steps.version.outputs.version }}">GitHub</a>.</p>
+                      <p>Here are the details:</p>
+                      <ul>
+                        <li><b>Tag:</b> v${{ steps.version.outputs.version }}</li>
+                        <li><b>Name:</b> Operculum</li>
+                      </ul>
+                      <p>You can view the full changelog <a href="${{ github.event.repository.html_url }}/blob/master/CHANGELOG.md">here</a>.</p>
+                  to: ${{ secrets.EMAIL_TO }}
+                  from: ${{ secrets.EMAIL_FROM }}
+                  content_type: text/html
+                  attachments: |
+                      ./CHANGELOG.md
+
+            - name: Notify on Discord
+              if: success()
+              run: |
+                  DISCORD_WEBHOOK_URL=${{ secrets.DISCORD_WEBHOOK_URL }}
+                  MESSAGE="Operculum: NEW Release: ${{ steps.version.outputs.version }} is published! Check it out at ${{ github.event.repository.html_url }}/blob/master/CHANGELOG.md\n NPM: https://www.npmjs.com/package/operculum"
+                  curl -H "Content-Type: application/json" -X POST -d '{"content": "'"$MESSAGE"'"}' $DISCORD_WEBHOOK_URL
+
+            # - name: Notify on Slack or Discord # Optionally notify team members on release, customize as per your needs
+            #   if: success() # Only notify if the previous steps were successful
+            #   uses: 8398a7/action-slack@v3
+            #   with:
+            #       status: custom
+            #       fields: job,ref
+            #   env:
+            #       SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
