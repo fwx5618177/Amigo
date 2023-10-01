@@ -1,7 +1,9 @@
 import { Command } from 'commander';
 import { version } from '../../package.json';
+import Main from './services/main';
 
 const program = new Command();
+const main = new Main();
 
 program.addHelpText('beforeAll', `It's a framework for robot.`);
 
@@ -15,7 +17,9 @@ program.version(version, '-v, --version', 'Amigo CLI version').name('amigo bot')
 program
     .command('run')
     .description('Run the bot')
-    .action(() => {});
+    .action(() => {
+        main.execute('run');
+    });
 
 // init new plugin
 program
@@ -32,5 +36,12 @@ program
         console.log('Adding new plugin:', name);
         // 调用相关逻辑
     });
+
+// Parse program arguments or show help by default
+const args = process.argv;
+if (args.length <= 2) {
+    program.outputHelp(); // Show help if no arguments
+    process.exit();
+}
 
 program.parse(process.argv);
