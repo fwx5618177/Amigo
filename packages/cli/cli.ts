@@ -9,10 +9,15 @@ program
     .usage('<command> [options]')
     .description('An enhanced CLI for resume template parsing and processing.');
 
-program
-    .version(version, '-v, --version', 'Output the current version of operculum.')
-    .name('operculum');
+program.version(version, '-v, --version', 'Amigo CLI version').name('amigo bot');
 
+// run bot
+program
+    .command('run')
+    .description('Run the bot')
+    .action(() => {});
+
+// init new plugin
 program
     .command('init <name>')
     .description('Initialize a new package')
