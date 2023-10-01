@@ -1,5 +1,4 @@
-node_modules
-.vscode
+node_modules/
 data
 lib/**/*.d.ts
 src/test.ts
