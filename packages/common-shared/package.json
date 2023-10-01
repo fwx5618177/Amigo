@@ -1,5 +1,5 @@
 {
-  "name": "@amigobot/plugins",
+  "name": "@amigobot/common-shared",
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
