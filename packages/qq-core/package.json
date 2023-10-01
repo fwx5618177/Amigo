@@ -1,5 +1,5 @@
 {
-  "name": "@icqq/core",
+  "name": "@amigobot/qq-core",
   "version": "0.5.4",
   "upday": "2023/9/25",
   "description": "QQ protocol for NodeJS!",

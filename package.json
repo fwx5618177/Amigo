@@ -1,18 +1,18 @@
 {
-  "name": "icqq",
+  "name": "amigobot",
   "version": "0.1.0",
-  "upday": "2023/9/25",
-  "description": "QQ protocol for NodeJS!",
+  "description": "Bot helper framework",
   "repository": {
     "type": "git",
-    "url": "https://github.com/icqqjs/icqq"
+    "url": ""
   },
-  "author": "icqqjs",
+  "author": "amigobot",
   "main": "dist/cli.js",
   "bin": {
-    "icqq": "dist/cli.js"
+    "amigobot": "dist/cli.js"
   },
   "scripts": {
+    "prepare": "husky install",
     "preinstall": "npx -y only-allow pnpm",
     "clean": "rimraf ./node_modules **/*/node_modules && pnpm run clean:cache",
     "clean:cache": "rimraf ./dist ./node_modules/.cache",
@@ -65,11 +65,18 @@
     "eslint": "^8.19.0",
     "eslint-config-prettier": "^8.5.0",
     "eslint-plugin-prettier": "^4.2.1",
+    "husky": "^8.0.3",
     "inquirer": "^8.0.0",
     "lint-staged": "^13.0.3",
     "mocha": "^10.2.0",
     "prettier": "^2.7.1",
     "rollup": "^3.29.4",
     "tsconfig-paths": "^4.0.0"
+  },
+  "husky": {
+    "hooks": {
+      "pre-commit": "lint-staged && pnpm run lint && pnpm run prettier && pnpm run build",
+      "pre-push": "pnpm run test"
+    }
   }
 }
