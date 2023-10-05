@@ -1,0 +1,12 @@
+{
+  "name": "@amigobot/core",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "mocha --require ts-node/register 'src/**/*.spec.ts' 'tests/**/*.spec.ts'"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
+}

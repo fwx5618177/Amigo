@@ -46,7 +46,10 @@ export enum VerboseLevel {
 }
 
 export class ApiRejection {
-    constructor(public code: number, public message = 'unknown') {
+    constructor(
+        public code: number,
+        public message = 'unknown',
+    ) {
         this.code = Number(this.code);
         this.message = this.message?.toString() || 'unknown';
     }
@@ -218,7 +221,11 @@ export class BaseClient extends Trapper {
     ];
     private ssoPacketList: Packet[] = [];
 
-    constructor(p: Platform = Platform.Android, d: ShortDevice, public config: Required<Config>) {
+    constructor(
+        p: Platform = Platform.Android,
+        d: ShortDevice,
+        public config: Required<Config>,
+    ) {
         super();
         if (config.log_config) log4js.configure(config.log_config as string);
         this.apk = getApkInfo(p, config.ver);

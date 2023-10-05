@@ -362,7 +362,9 @@ export class Client extends BaseClient {
             if (!fs.existsSync(token_path) && fs.existsSync(token_path + '_bak')) {
                 fs.renameSync(token_path + '_bak', token_path);
             }
+
             const token = await fs.promises.readFile(token_path);
+
             return this.tokenLogin(token);
         } catch (e) {
             if (this.password_md5 && uin) {
