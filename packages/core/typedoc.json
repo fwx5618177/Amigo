@@ -4,7 +4,7 @@
     "entryPoints": ["./src/**/*.ts", "./tests/**/*.ts", "./examples/**/*.ts"],
     "out": "docs",
     "preserveWatchOutput": true,
-    "exclude": ["**/node_modules/**"],
+    "exclude": ["**/node_modules/**", "./**/*.spec.*"],
     "includes": ".",
     "useTsLinkResolution": true,
     "excludeExternals": true,

@@ -1,5 +1,7 @@
 import crypto from 'crypto';
-
+/**
+ * 加解密的
+ */
 class EncryptionAlgorithm {
     /**
      * AES编码
