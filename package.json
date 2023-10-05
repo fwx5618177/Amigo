@@ -23,7 +23,8 @@
     "lint": "eslint --ignore-path .gitignore --ext .ts,.js . --cache --debug",
     "lint:fix": "eslint --ignore-path .gitignore --ext .ts,.js --fix . --cache --debug",
     "prettier": "prettier --ignore-path .gitignore --write \"**/*.{ts,js}\"",
-    "start": "ts-node -r tsconfig-paths/register --transpile-only cli.ts"
+    "start": "ts-node -r tsconfig-paths/register --transpile-only cli.ts",
+    "doc": "typedoc"
   },
   "keywords": [],
   "engines": {

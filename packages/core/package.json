@@ -4,9 +4,13 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "mocha --require ts-node/register 'src/**/*.spec.ts' 'tests/**/*.spec.ts'"
+    "test": "mocha --require ts-node/register 'src/**/*.spec.ts' 'tests/**/*.spec.ts'",
+    "doc": "typedoc --options ./typedoc.json"
   },
   "keywords": [],
   "author": "",
-  "license": "ISC"
+  "license": "ISC",
+  "dependencies": {
+    "typedoc": "^0.25.1"
+  }
 }
