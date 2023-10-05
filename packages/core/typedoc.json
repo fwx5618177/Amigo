@@ -1,8 +1,8 @@
 {
-    "entryPoints": ["./src/**/*.ts", "./tests/**/*.ts", "./examples/**/*.ts"],
     "out": "docs",
     "preserveWatchOutput": true,
     "exclude": ["**/node_modules/**"],
+    "includes": ".",
     "useTsLinkResolution": true,
     "excludeExternals": true,
     "tsconfig": "./tsconfig.json"
