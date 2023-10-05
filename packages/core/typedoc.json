@@ -2,7 +2,6 @@
     "name": "@amigobot/core",
     "basePath": ".",
     "entryPoints": ["./src/**/*.ts", "./tests/**/*.ts", "./examples/**/*.ts"],
-    "entryPointStrategy": "resolve",
     "out": "docs",
     "preserveWatchOutput": true,
     "exclude": ["**/node_modules/**"],
@@ -15,5 +14,5 @@
     "commentStyle": "all",
     "pretty": true,
     "searchInComments": true,
-    "watch": true
+    "watch": false
 }
