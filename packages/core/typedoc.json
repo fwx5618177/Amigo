@@ -1,9 +1,19 @@
 {
+    "name": "@amigobot/core",
+    "basePath": ".",
+    "entryPoints": ["./src/**/*.ts", "./tests/**/*.ts", "./examples/**/*.ts"],
+    "entryPointStrategy": "resolve",
     "out": "docs",
     "preserveWatchOutput": true,
     "exclude": ["**/node_modules/**"],
     "includes": ".",
     "useTsLinkResolution": true,
     "excludeExternals": true,
-    "tsconfig": "./tsconfig.json"
+    "tsconfig": "./tsconfig.json",
+    "skipErrorChecking": true,
+    "cleanOutputDir": true,
+    "commentStyle": "all",
+    "pretty": true,
+    "searchInComments": true,
+    "watch": true
 }

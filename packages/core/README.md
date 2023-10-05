@@ -1,0 +1,1 @@
+# @amigobot/core
