@@ -100,7 +100,10 @@ LQ+FLkpncClKVIrBwv6PHyUvuCb0rIarmgDnzkfQAqVufEtR64iazGDKatvJ9y6B
 9NMbHddGSAUmRTCrHQIDAQAB
 -----END PUBLIC KEY-----`;
 
-    constructor(public apk: Apk, d?: ShortDevice) {
+    constructor(
+        public apk: Apk,
+        d?: ShortDevice,
+    ) {
         if (!d) d = generateShortDevice();
         Object.assign(this, generateFullDevice(apk, d));
     }
