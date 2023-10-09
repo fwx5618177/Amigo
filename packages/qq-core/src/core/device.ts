@@ -247,6 +247,7 @@ LQ+FLkpncClKVIrBwv6PHyUvuCb0rIarmgDnzkfQAqVufEtR64iazGDKatvJ9y6B
             fixedRand(5, 0),
             fixedRand(5, 0),
         ].map((str, idx) => `k${idx + 1}:${str}`);
+
         return {
             'androidId': this.android_id,
             'platformId': 1,

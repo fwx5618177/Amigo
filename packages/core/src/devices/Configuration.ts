@@ -1,6 +1,6 @@
 import yaml from 'js-yaml';
 import fs from 'fs';
-import { DeviceInfo, FullDeviceInfo } from './type'; // 路径根据实际情况调整
+import { DeviceInfo, DeviceManager, FullDeviceInfo } from './type'; // 路径根据实际情况调整
 
 /**
  * Configuration 类用于加载和管理设备配置信息。
@@ -13,8 +13,9 @@ class Configuration {
     private configPath: string;
     // 存储设备信息和完整设备信息的对象
     private configData: {
-        deviceInfo: DeviceInfo;
-        fullDeviceInfo: FullDeviceInfo;
+        deviceInfo?: DeviceInfo;
+        fullDeviceInfo?: FullDeviceInfo;
+        deviceManager?: DeviceManager;
     };
 
     /**
@@ -70,6 +71,14 @@ class Configuration {
      */
     public get fullDeviceInfo(): FullDeviceInfo {
         return this.configData.fullDeviceInfo;
+    }
+
+    /**
+     * 获取密钥信息
+     * @returns 返回密钥信息secret, publicKey
+     */
+    public get deviceManager(): DeviceManager {
+        return this.configData.deviceManager;
     }
 }
 

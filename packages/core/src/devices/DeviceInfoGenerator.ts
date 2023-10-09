@@ -95,11 +95,10 @@ class DeviceInfoGenerator {
 
     /**
      * 生成完整的设备信息
-     * @param apk - Apk对象，暂时未使用
      * @param shortDevice - 可选的简化版设备信息
      * @returns 返回包含完整设备信息的对象
      */
-    public generateFullDevice(apk: any, shortDevice?: DeviceInfo): FullDeviceInfo {
+    public generateFullDevice(shortDevice?: DeviceInfo): FullDeviceInfo {
         const device = shortDevice || this.generateShortDevice();
         const configFullDeviceInfo = this.configuration.fullDeviceInfo;
 
