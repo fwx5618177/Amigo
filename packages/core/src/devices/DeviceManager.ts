@@ -143,9 +143,7 @@ class DeviceManager implements TrackDeviceInfo {
         try {
             const response = await axios.post<{ data: string; code: number }>(
                 'https://snowflake.qq.com/ola/android',
-                {
-                    ...params,
-                },
+                params,
                 { headers },
             );
 
